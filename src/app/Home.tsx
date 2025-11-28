@@ -9,7 +9,12 @@ export default function Home(){
       <SafeAreaView>
 
       <View>
-        <Text className='text-3xl bg-red-500'>index</Text>
+        <Text className='text-3xl bg-red-500'>abdelrahmen
+
+        </Text>
+        <Text className="flex p-10 text-5xl font-bold">
+          abdelkader
+        </Text>
       </View>
       </SafeAreaView>
     )
