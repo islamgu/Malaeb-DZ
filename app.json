@@ -1,41 +1,36 @@
 {
   "expo": {
-    "name": "Malaeb DZ",
-    "slug": "Malaeb DZ",
+    "name": "StadiumsManagerMobile",
+    "slug": "StadiumsManagerMobile",
     "version": "1.0.0",
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "experiments": {
-      "tsconfigPaths": true
-    },
-    "plugins": [
-      "expo-router"
-    ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
       "supportsTablet": true
     },
-    
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.islam7.StadiumsManagerMobile"
     },
-    
-  "scheme": "your-app-scheme"
-
-
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "38c18bff-e851-4319-8cec-7629cd74ccfe"
+      }
+    }
   }
 }
