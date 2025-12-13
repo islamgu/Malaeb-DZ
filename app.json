@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "StadiumsManagerMobile",
+    "name": "Malaeb DZ",
     "slug": "StadiumsManagerMobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -22,7 +22,12 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.islam7.StadiumsManagerMobile"
+      "package": "com.islam7.MalaebDZ",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBl89JpKYZJeK4PAglALP5T94o5vIgvrVM"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"

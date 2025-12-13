@@ -4,8 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Use your computer's local IP for device testing
 // Android emulator: use 10.0.2.2, Android physical device: use your computer's IP
 // iOS simulator: can use localhost, iOS physical device: use your computer's IP
-const API_URL = 'http://192.168.1.33:3000/api';
-export const BASE_URL = 'http://192.168.1.33:3000';
+const API_URL = 'https://malaeb-dz.onrender.com/api';
+export const BASE_URL = 'https://malaeb-dz.onrender.com';
 
 // Create axios instance
 const api = axios.create({
