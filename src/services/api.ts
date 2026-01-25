@@ -26,6 +26,15 @@ api.interceptors.request.use(async (config) => {
 
 // ============ Auth ============
 
+export interface AuthUser {
+    id: string;
+    email: string;
+    name: string | null;
+    phone: string | null;
+    phoneVerified: boolean;
+    role: 'USER' | 'ADMIN' | 'PREMIUM';
+}
+
 export const authApi = {
     login: async (email: string, password: string) => {
         const { data } = await api.post('/auth/login', { email, password });
@@ -34,8 +43,8 @@ export const authApi = {
         return data;
     },
 
-    register: async (email: string, password: string, name: string) => {
-        const { data } = await api.post('/auth/register', { email, password, name });
+    register: async (email: string, password: string, name: string, phone?: string) => {
+        const { data } = await api.post('/auth/register', { email, password, name, phone });
         await AsyncStorage.setItem('token', data.token);
         await AsyncStorage.setItem('user', JSON.stringify(data.user));
         return data;
@@ -46,18 +55,37 @@ export const authApi = {
         await AsyncStorage.removeItem('user');
     },
 
-    getMe: async () => {
+    getMe: async (): Promise<AuthUser> => {
         const { data } = await api.get('/auth/me');
         return data;
     },
 
-    getStoredUser: async () => {
+    getStoredUser: async (): Promise<AuthUser | null> => {
         const user = await AsyncStorage.getItem('user');
         return user ? JSON.parse(user) : null;
     },
 
     getToken: async () => {
         return AsyncStorage.getItem('token');
+    },
+
+    // Phone OTP methods
+    sendOtp: async (phone: string) => {
+        const { data } = await api.post('/auth/send-otp', { phone });
+        return data;
+    },
+
+    verifyPhone: async (phone: string, firebaseUid?: string) => {
+        const { data } = await api.post('/auth/verify-phone', { phone, firebaseUid });
+        await AsyncStorage.setItem('user', JSON.stringify(data.user));
+        return data;
+    },
+
+    phoneLogin: async (phone: string, firebaseIdToken?: string) => {
+        const { data } = await api.post('/auth/phone-login', { phone, firebaseIdToken });
+        await AsyncStorage.setItem('token', data.token);
+        await AsyncStorage.setItem('user', JSON.stringify(data.user));
+        return data;
     },
 };
 

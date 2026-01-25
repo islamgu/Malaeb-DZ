@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi } from '../services/api';
+import { authApi, AuthUser } from '../services/api';
 
 export interface User {
     id: string;
     email: string;
     name: string | null;
+    phone: string | null;
+    phoneVerified: boolean;
     role: 'USER' | 'ADMIN' | 'PREMIUM';
 }
 
@@ -14,8 +16,11 @@ interface AuthContextType {
     isAuthenticated: boolean;
     isAdmin: boolean;
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-    register: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>;
+    register: (email: string, password: string, name: string, phone?: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => Promise<void>;
+    phoneLogin: (phone: string, firebaseIdToken?: string) => Promise<{ success: boolean; error?: string }>;
+    verifyPhone: (phone: string, firebaseUid?: string) => Promise<{ success: boolean; error?: string }>;
+    refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,12 +38,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
             const storedUser = await authApi.getStoredUser();
             if (storedUser) {
-                setUser(storedUser);
+                setUser(storedUser as User);
             }
         } catch (error) {
             console.error('Error checking stored user:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const refreshUser = async () => {
+        try {
+            const freshUser = await authApi.getMe();
+            setUser(freshUser as User);
+        } catch (error) {
+            console.error('Error refreshing user:', error);
         }
     };
 
@@ -53,13 +67,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    const register = async (email: string, password: string, name: string) => {
+    const register = async (email: string, password: string, name: string, phone?: string) => {
         try {
-            const { user: newUser } = await authApi.register(email, password, name);
+            const { user: newUser } = await authApi.register(email, password, name, phone);
             setUser(newUser);
             return { success: true };
         } catch (error: any) {
             const message = error.response?.data?.error || 'Registration failed';
+            return { success: false, error: message };
+        }
+    };
+
+    const phoneLogin = async (phone: string, firebaseIdToken?: string) => {
+        try {
+            const { user: loggedInUser } = await authApi.phoneLogin(phone, firebaseIdToken);
+            setUser(loggedInUser);
+            return { success: true };
+        } catch (error: any) {
+            const message = error.response?.data?.error || 'Phone login failed';
+            return { success: false, error: message };
+        }
+    };
+
+    const verifyPhone = async (phone: string, firebaseUid?: string) => {
+        try {
+            const { user: updatedUser } = await authApi.verifyPhone(phone, firebaseUid);
+            setUser(updatedUser);
+            return { success: true };
+        } catch (error: any) {
+            const message = error.response?.data?.error || 'Phone verification failed';
             return { success: false, error: message };
         }
     };
@@ -79,6 +115,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 login,
                 register,
                 logout,
+                phoneLogin,
+                verifyPhone,
+                refreshUser,
             }}
         >
             {children}

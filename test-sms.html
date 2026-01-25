@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase SMS Test - Malaeb DZ</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: #fff;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        h1 { text-align: center; margin-bottom: 10px; }
+        .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; }
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 16px;
+        }
+        input::placeholder { color: rgba(255,255,255,0.5); }
+        input:focus { outline: none; border-color: #4CAF50; }
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: scale(1.02); }
+        button:disabled { background: #666; cursor: not-allowed; transform: none; }
+        .logs {
+            margin-top: 30px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .logs h3 { margin-top: 0; }
+        .log-entry { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-family: monospace; font-size: 12px; }
+        .log-entry:last-child { border-bottom: none; }
+        .log-success { color: #4CAF50; }
+        .log-error { color: #f44336; }
+        .log-info { color: #2196F3; }
+        .log-warn { color: #ff9800; }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .step.active { background: #4CAF50; }
+        .step.done { background: #2196F3; }
+        #recaptcha-container { margin: 20px 0; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 SMS Test</h1>
+        <p class="subtitle">Test Firebase Phone Authentication</p>
+        
+        <div class="step-indicator">
+            <div class="step active" id="step1">1</div>
+            <div class="step" id="step2">2</div>
+            <div class="step" id="step3">3</div>
+        </div>
+
+        <!-- Step 1: Phone Number -->
+        <div id="phone-section">
+            <div class="form-group">
+                <label>Phone Number (E.164 format)</label>
+                <input type="tel" id="phone" placeholder="+213668612210" value="+213668612210">
+            </div>
+            <div id="recaptcha-container"></div>
+            <button id="send-btn" onclick="sendOtp()">📱 Send SMS Code</button>
+        </div>
+
+        <!-- Step 2: OTP Verification -->
+        <div id="otp-section" class="hidden">
+            <div class="form-group">
+                <label>Enter the 6-digit code from SMS</label>
+                <input type="text" id="otp" placeholder="123456" maxlength="6">
+            </div>
+            <button onclick="verifyOtp()">✅ Verify Code</button>
+            <button style="margin-top: 10px; background: #666;" onclick="resetForm()">🔄 Start Over</button>
+        </div>
+
+        <!-- Step 3: Success -->
+        <div id="success-section" class="hidden">
+            <div style="text-align: center; padding: 30px 0;">
+                <div style="font-size: 60px;">✅</div>
+                <h2>Phone Verified!</h2>
+                <p id="verified-phone"></p>
+            </div>
+            <button onclick="signOut()">Sign Out & Test Again</button>
+        </div>
+
+        <!-- Logs -->
+        <div class="logs">
+            <h3>📋 Debug Logs</h3>
+            <div id="logs"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    
+    <script>
+        // Firebase Configuration from your google-services.json
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3OL-d7q2K9_8dFNDf1_ADoassox7B3m4",
+            authDomain: "malaeb-dz-71d04.firebaseapp.com",
+            projectId: "malaeb-dz-71d04",
+            storageBucket: "malaeb-dz-71d04.firebasestorage.app",
+            messagingSenderId: "99517445148",
+            appId: "1:99517445148:android:ddbcef901620fd87a59bd9"
+        };
+
+        let confirmationResult = null;
+        let recaptchaVerifier = null;
+
+        // Initialize Firebase
+        function init() {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                log('Firebase initialized successfully', 'success');
+                log(`Project ID: ${firebaseConfig.projectId}`, 'info');
+                
+                // Setup reCAPTCHA
+                setupRecaptcha();
+            } catch (error) {
+                log(`Firebase init error: ${error.message}`, 'error');
+            }
+        }
+
+        function setupRecaptcha() {
+            try {
+                recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                    'size': 'normal',
+                    'callback': (response) => {
+                        log('reCAPTCHA verified!', 'success');
+                        document.getElementById('send-btn').disabled = false;
+                    },
+                    'expired-callback': () => {
+                        log('reCAPTCHA expired, please solve again', 'warn');
+                        document.getElementById('send-btn').disabled = true;
+                    }
+                });
+                recaptchaVerifier.render().then((widgetId) => {
+                    log('reCAPTCHA widget rendered', 'info');
+                });
+            } catch (error) {
+                log(`reCAPTCHA error: ${error.message}`, 'error');
+            }
+        }
+
+        async function sendOtp() {
+            const phone = document.getElementById('phone').value.trim();
+            
+            if (!phone || !phone.startsWith('+')) {
+                log('Please enter phone in E.164 format (e.g., +213668612210)', 'error');
+                return;
+            }
+
+            log(`Attempting to send SMS to: ${phone}`, 'info');
+            document.getElementById('send-btn').disabled = true;
+            document.getElementById('send-btn').textContent = '⏳ Sending...';
+
+            try {
+                confirmationResult = await firebase.auth().signInWithPhoneNumber(phone, recaptchaVerifier);
+                log('✅ SMS sent successfully! Check your phone.', 'success');
+                log(`Verification ID received: ${confirmationResult.verificationId.substring(0, 20)}...`, 'info');
+                
+                // Show OTP section
+                document.getElementById('phone-section').classList.add('hidden');
+                document.getElementById('otp-section').classList.remove('hidden');
+                document.getElementById('step1').classList.remove('active');
+                document.getElementById('step1').classList.add('done');
+                document.getElementById('step2').classList.add('active');
+                
+            } catch (error) {
+                log(`❌ Error sending SMS: ${error.code}`, 'error');
+                log(`Message: ${error.message}`, 'error');
+                
+                // Common error explanations
+                if (error.code === 'auth/invalid-phone-number') {
+                    log('💡 The phone number format is invalid', 'warn');
+                } else if (error.code === 'auth/too-many-requests') {
+                    log('💡 Too many attempts. Wait a few minutes and try again.', 'warn');
+                } else if (error.code === 'auth/quota-exceeded') {
+                    log('💡 SMS quota exceeded. Check Firebase billing.', 'warn');
+                } else if (error.code === 'auth/captcha-check-failed') {
+                    log('💡 reCAPTCHA verification failed. Try again.', 'warn');
+                } else if (error.code === 'auth/missing-client-identifier') {
+                    log('💡 reCAPTCHA not completed. Click the checkbox above.', 'warn');
+                } else if (error.code === 'auth/operation-not-allowed') {
+                    log('💡 Phone auth not enabled in Firebase Console!', 'warn');
+                }
+                
+                document.getElementById('send-btn').disabled = false;
+                document.getElementById('send-btn').textContent = '📱 Send SMS Code';
+            }
+        }
+
+        async function verifyOtp() {
+            const otp = document.getElementById('otp').value.trim();
+            
+            if (!otp || otp.length !== 6) {
+                log('Please enter the 6-digit code', 'error');
+                return;
+            }
+
+            log(`Verifying OTP: ${otp}`, 'info');
+
+            try {
+                const result = await confirmationResult.confirm(otp);
+                const user = result.user;
+                
+                log('✅ Phone number verified!', 'success');
+                log(`User UID: ${user.uid}`, 'info');
+                log(`Phone: ${user.phoneNumber}`, 'info');
+                
+                // Show success section
+                document.getElementById('otp-section').classList.add('hidden');
+                document.getElementById('success-section').classList.remove('hidden');
+                document.getElementById('verified-phone').textContent = `Verified: ${user.phoneNumber}`;
+                document.getElementById('step2').classList.remove('active');
+                document.getElementById('step2').classList.add('done');
+                document.getElementById('step3').classList.add('active');
+                
+            } catch (error) {
+                log(`❌ Verification failed: ${error.code}`, 'error');
+                log(`Message: ${error.message}`, 'error');
+                
+                if (error.code === 'auth/invalid-verification-code') {
+                    log('💡 The code you entered is incorrect', 'warn');
+                } else if (error.code === 'auth/code-expired') {
+                    log('💡 The code has expired. Request a new one.', 'warn');
+                }
+            }
+        }
+
+        async function signOut() {
+            try {
+                await firebase.auth().signOut();
+                log('Signed out successfully', 'info');
+                resetForm();
+            } catch (error) {
+                log(`Sign out error: ${error.message}`, 'error');
+            }
+        }
+
+        function resetForm() {
+            location.reload();
+        }
+
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            const time = new Date().toLocaleTimeString();
+            entry.textContent = `[${time}] ${message}`;
+            logsDiv.insertBefore(entry, logsDiv.firstChild);
+            console.log(`[${type}] ${message}`);
+        }
+
+        // Initialize on page load
+        init();
+    </script>
+</body>
+</html>

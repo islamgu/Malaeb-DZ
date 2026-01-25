@@ -1,0 +1,29 @@
+{
+    "project_info": {
+        "project_number": "99517445148",
+        "project_id": "malaeb-dz-71d04",
+        "storage_bucket": "malaeb-dz-71d04.firebasestorage.app"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:99517445148:android:ddbcef901620fd87a59bd9",
+                "android_client_info": {
+                    "package_name": "com.islam7.MalaebDZ"
+                }
+            },
+            "oauth_client": [],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyD3OL-d7q2K9_8dFNDf1_ADoassox7B3m4"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": []
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}
