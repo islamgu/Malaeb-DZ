@@ -3,6 +3,7 @@ import { View, Text, Animated, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from '../../translations';
+import { useAuth } from '../../context/AuthContext';
 
 export const SplashScreen: React.FC = () => {
     const navigation = useNavigation<any>();
@@ -10,6 +11,7 @@ export const SplashScreen: React.FC = () => {
     const fadeAnim = React.useRef(new Animated.Value(0)).current;
     const scaleAnim = React.useRef(new Animated.Value(0.8)).current;
     const { t } = useTranslation();
+    const { isAuthenticated, isAdmin, isLoading } = useAuth();
 
     useEffect(() => {
         // Start animations
@@ -26,14 +28,28 @@ export const SplashScreen: React.FC = () => {
                 useNativeDriver: true,
             }),
         ]).start();
+    }, [fadeAnim, scaleAnim]);
 
-        // Navigate after delay
+    useEffect(() => {
+        // Wait for auth to finish loading before navigating
+        if (isLoading) return;
+
+        // Navigate after a short delay for splash animation
         const timer = setTimeout(() => {
-            navigation.replace('SignUp');
-        }, 2500);
+            if (isAuthenticated) {
+                // Navigate based on user role
+                if (isAdmin) {
+                    navigation.replace('AdminStack');
+                } else {
+                    navigation.replace('UserTabs');
+                }
+            } else {
+                navigation.replace('SignUp');
+            }
+        }, 1500);
 
         return () => clearTimeout(timer);
-    }, [navigation, fadeAnim, scaleAnim]);
+    }, [isLoading, isAuthenticated, isAdmin, navigation]);
 
     return (
         <View className="flex-1 bg-primary items-center justify-center px-6">
