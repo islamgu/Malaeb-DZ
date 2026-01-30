@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, Image, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Phone, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '../../translations';
 
-export const SignUpScreen: React.FC = () => {
+export const LoginScreen: React.FC = () => {
     const navigation = useNavigation<any>();
     const insets = useSafeAreaInsets();
-    const { sendOTP } = useAuth();
+    const { verifyCredentials, sendOTP } = useAuth();
     const { t, isRTL } = useTranslation();
 
     const [email, setEmail] = useState('');
@@ -21,16 +21,13 @@ export const SignUpScreen: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const formatPhoneDisplay = (phone: string) => {
-        // Remove non-digits
         const digits = phone.replace(/\D/g, '');
-        // Format as XXX XXX XXX
         if (digits.length <= 3) return digits;
         if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
         return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 9)}`;
     };
 
     const handlePhoneChange = (text: string) => {
-        // Keep only digits, max 9 characters (Algerian format without country code)
         const digits = text.replace(/\D/g, '').slice(0, 9);
         setPhoneNumber(digits);
     };
@@ -52,8 +49,8 @@ export const SignUpScreen: React.FC = () => {
         }
 
         // Validate password
-        if (!password || password.length < 4) {
-            Alert.alert(t.common.error, t.auth.passwordMinLength || 'Password must be at least 4 characters');
+        if (!password) {
+            Alert.alert(t.common.error, t.auth.enterPassword || 'Please enter your password');
             return;
         }
 
@@ -65,24 +62,34 @@ export const SignUpScreen: React.FC = () => {
 
         setIsLoading(true);
         try {
-            // Format for E.164 (Algeria: +213)
             const formattedPhone = '+213' + phoneNumber.replace(/^0/, '');
 
-            const result = await sendOTP(formattedPhone);
+            // First verify credentials with backend
+            const credentialsResult = await verifyCredentials(email.trim(), password, formattedPhone);
 
-            if (result.success && result.verificationId) {
+            if (!credentialsResult.success) {
+                Alert.alert(t.common.error, credentialsResult.error || t.auth.invalidCredentials || 'Invalid credentials');
+                setIsLoading(false);
+                return;
+            }
+
+            // Credentials valid, now send OTP
+            const otpResult = await sendOTP(formattedPhone);
+
+            if (otpResult.success && otpResult.verificationId) {
                 navigation.navigate('OTPVerification', {
-                    verificationId: result.verificationId,
+                    verificationId: otpResult.verificationId,
                     phoneNumber: formattedPhone,
                     email: email.trim(),
                     password: password,
-                    isSignUp: true,
+                    isSignUp: false,
+                    isAdmin: credentialsResult.isAdmin,
                 });
             } else {
-                Alert.alert(t.common.error, result.error || t.auth.failedToSendOTP || 'Failed to send OTP');
+                Alert.alert(t.common.error, otpResult.error || t.auth.failedToSendOTP || 'Failed to send OTP');
             }
-        } catch (error) {
-            Alert.alert(t.common.error, t.auth.somethingWentWrong);
+        } catch (error: any) {
+            Alert.alert(t.common.error, error.message || t.auth.somethingWentWrong);
         } finally {
             setIsLoading(false);
         }
@@ -116,10 +123,10 @@ export const SignUpScreen: React.FC = () => {
                             />
                         </View>
                         <Text className="text-3xl font-bold text-foreground mb-2">
-                            {t.auth.createAccount || 'Create Account'}
+                            {t.auth.welcomeBack || 'Welcome Back'}
                         </Text>
                         <Text className="text-gray-600 text-center">
-                            {t.auth.enterDetailsToSignUp || 'Enter your details to get started'}
+                            {t.auth.signInToContinue || 'Sign in to continue'}
                         </Text>
                     </View>
 
@@ -176,18 +183,16 @@ export const SignUpScreen: React.FC = () => {
                                 {t.auth.phoneNumber || 'Phone Number'}
                             </Text>
                             <View className="flex-row items-center">
-                                {/* Country Code */}
                                 <View className="bg-gray-100 rounded-xl px-4 py-4 mr-2 flex-row items-center">
                                     <Text className="text-lg font-semibold text-foreground">🇩🇿 +213</Text>
                                 </View>
-                                {/* Phone Input */}
                                 <View className="flex-1">
                                     <Input
                                         value={formatPhoneDisplay(phoneNumber)}
                                         onChangeText={handlePhoneChange}
                                         placeholder="XXX XXX XXX"
                                         keyboardType="phone-pad"
-                                        maxLength={11} // 9 digits + 2 spaces
+                                        maxLength={11}
                                     />
                                 </View>
                             </View>
@@ -195,15 +200,15 @@ export const SignUpScreen: React.FC = () => {
 
                         <Button
                             onPress={handleSubmit}
-                            disabled={isLoading || phoneNumber.length < 9 || !email.trim() || password.length < 4}
+                            disabled={isLoading || phoneNumber.length < 9 || !email.trim() || !password}
                         >
                             {isLoading ? (
                                 <ActivityIndicator color="white" />
                             ) : (
                                 <View className="flex-row items-center">
-                                    <Phone size={20} color="white" />
+                                    <LogIn size={20} color="white" />
                                     <Text className="text-white font-semibold ml-2">
-                                        {t.auth.sendOTP || 'Send OTP'}
+                                        {t.auth.signIn || 'Sign In'}
                                     </Text>
                                 </View>
                             )}
@@ -214,14 +219,14 @@ export const SignUpScreen: React.FC = () => {
                             {t.auth.otpInfo || 'We will send you a verification code via SMS'}
                         </Text>
 
-                        {/* Login Link */}
+                        {/* SignUp Link */}
                         <TouchableOpacity
-                            onPress={() => navigation.navigate('Login')}
+                            onPress={() => navigation.navigate('SignUp')}
                             className="mt-4"
                         >
                             <Text className="text-center text-gray-600">
-                                {t.auth.alreadyHaveAccount || 'Already have an account?'}{' '}
-                                <Text className="text-primary font-semibold">{t.auth.signIn || 'Sign In'}</Text>
+                                {t.auth.dontHaveAccount || "Don't have an account?"}{' '}
+                                <Text className="text-primary font-semibold">{t.auth.signUp || 'Sign Up'}</Text>
                             </Text>
                         </TouchableOpacity>
                     </View>

@@ -117,7 +117,7 @@ async function seed() {
         const [admin] = await db.insert(users).values({
             email: 'admin@gmail.com',
             name: 'Admin',
-            phone: '1234', // Password stored here for demo
+            phone: '+213558099019', // Real admin phone number
             role: 'ADMIN',
         }).onConflictDoNothing().returning();
 

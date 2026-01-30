@@ -2,18 +2,24 @@ import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { db } from '../db';
 import { users } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { AuthRequest, authenticate, generateToken } from '../middleware/auth';
 
 const router = Router();
 
-// POST /api/auth/register
+// POST /api/auth/register - Step 1: Register with email, password, phone
+// Frontend will then send OTP and verify before allowing login
 router.post('/register', async (req, res) => {
     try {
         const { email, password, name, phone } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({ error: 'Email and password are required' });
+        if (!email || !password || !phone) {
+            return res.status(400).json({ error: 'Email, password, and phone are required' });
+        }
+
+        // Validate password length
+        if (password.length < 4) {
+            return res.status(400).json({ error: 'Password must be at least 4 characters' });
         }
 
         // Check if user exists
@@ -22,14 +28,21 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ error: 'Email already registered' });
         }
 
+        // Check if phone already registered
+        const existingPhone = await db.select().from(users).where(eq(users.phone, phone));
+        if (existingPhone.length > 0) {
+            return res.status(400).json({ error: 'Phone number already registered' });
+        }
+
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create user (store password in phone field temporarily - should add password column)
+        // Create user with hashed password
         const [newUser] = await db.insert(users).values({
             email,
+            password: hashedPassword,
             name,
-            phone: phone || hashedPassword, // Store hashed password
+            phone,
             role: 'USER',
         }).returning();
 
@@ -40,6 +53,7 @@ router.post('/register', async (req, res) => {
                 id: newUser.id,
                 email: newUser.email,
                 name: newUser.name,
+                phone: newUser.phone,
                 role: newUser.role,
             },
             token,
@@ -50,10 +64,65 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// POST /api/auth/login
+// POST /api/auth/verify-credentials - Verify email, password, and phone before OTP
+// Returns success if credentials match, then frontend can send OTP
+router.post('/verify-credentials', async (req, res) => {
+    try {
+        const { email, password, phone } = req.body;
+
+        if (!email || !password || !phone) {
+            return res.status(400).json({ error: 'Email, password, and phone are required' });
+        }
+
+        // Find user by email
+        const [user] = await db.select().from(users).where(eq(users.email, email));
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        // For admin, check hardcoded credentials
+        if (email === 'admin@gmail.com' && password === '1234') {
+            // Admin phone can be any registered phone or specific admin phone
+            if (user.phone !== phone && phone !== '+213558099019') {
+                return res.status(401).json({ error: 'Phone number does not match' });
+            }
+            return res.json({
+                success: true,
+                isAdmin: true,
+                message: 'Credentials verified. Please verify OTP.',
+            });
+        }
+
+        // Verify password
+        if (!user.password) {
+            return res.status(401).json({ error: 'Invalid credentials. Please register first.' });
+        }
+
+        const isValid = await bcrypt.compare(password, user.password);
+        if (!isValid) {
+            return res.status(401).json({ error: 'Invalid password' });
+        }
+
+        // Verify phone matches
+        if (user.phone !== phone) {
+            return res.status(401).json({ error: 'Phone number does not match' });
+        }
+
+        res.json({
+            success: true,
+            isAdmin: user.role === 'ADMIN',
+            message: 'Credentials verified. Please verify OTP.',
+        });
+    } catch (error) {
+        console.error('Verify credentials error:', error);
+        res.status(500).json({ error: 'Failed to verify credentials' });
+    }
+});
+
+// POST /api/auth/login - Complete login after OTP verification
 router.post('/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, phone } = req.body;
 
         if (!email || !password) {
             return res.status(400).json({ error: 'Email and password are required' });
@@ -73,14 +142,19 @@ router.post('/login', async (req, res) => {
                     id: user.id,
                     email: user.email,
                     name: user.name,
+                    phone: user.phone,
                     role: user.role,
                 },
                 token,
             });
         }
 
-        // For regular users, verify password (stored in phone field)
-        const isValid = await bcrypt.compare(password, user.phone || '');
+        // Verify password
+        if (!user.password) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
@@ -92,6 +166,7 @@ router.post('/login', async (req, res) => {
                 id: user.id,
                 email: user.email,
                 name: user.name,
+                phone: user.phone,
                 role: user.role,
             },
             token,
@@ -114,6 +189,7 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
             id: user.id,
             email: user.email,
             name: user.name,
+            phone: user.phone,
             role: user.role,
         });
     } catch (error) {

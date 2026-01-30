@@ -27,17 +27,22 @@ api.interceptors.request.use(async (config) => {
 // ============ Auth ============
 
 export const authApi = {
-    login: async (email: string, password: string) => {
-        const { data } = await api.post('/auth/login', { email, password });
+    login: async (email: string, password: string, phone?: string) => {
+        const { data } = await api.post('/auth/login', { email, password, phone });
         await AsyncStorage.setItem('token', data.token);
         await AsyncStorage.setItem('user', JSON.stringify(data.user));
         return data;
     },
 
-    register: async (email: string, password: string, name: string) => {
-        const { data } = await api.post('/auth/register', { email, password, name });
+    register: async (email: string, password: string, phone: string, name?: string) => {
+        const { data } = await api.post('/auth/register', { email, password, phone, name });
         await AsyncStorage.setItem('token', data.token);
         await AsyncStorage.setItem('user', JSON.stringify(data.user));
+        return data;
+    },
+
+    verifyCredentials: async (email: string, password: string, phone: string) => {
+        const { data } = await api.post('/auth/verify-credentials', { email, password, phone });
         return data;
     },
 
@@ -58,6 +63,13 @@ export const authApi = {
 
     getToken: async () => {
         return AsyncStorage.getItem('token');
+    },
+
+    phoneLogin: async (phoneNumber: string, email?: string) => {
+        const { data } = await api.post('/auth/phone-login', { phone: phoneNumber, email });
+        await AsyncStorage.setItem('token', data.token);
+        await AsyncStorage.setItem('user', JSON.stringify(data.user));
+        return data;
     },
 };
 
