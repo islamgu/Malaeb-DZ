@@ -94,7 +94,7 @@ export const sendPhoneOtp = async (
 export const verifyPhoneOtp = async (
     confirmationResult: FirebaseAuthTypes.ConfirmationResult,
     otpCode: string
-): Promise<FirebaseAuthTypes.UserCredential> => {
+): Promise<FirebaseAuthTypes.UserCredential | null> => {
     try {
         const userCredential = await confirmationResult.confirm(otpCode);
         return userCredential;

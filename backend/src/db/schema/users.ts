@@ -7,10 +7,6 @@ export const userRoleEnum = pgEnum('user_role', ['USER', 'ADMIN', 'PREMIUM']);
 export const users = pgTable('users', {
     id: uuid('id').primaryKey().defaultRandom(),
     email: text('email').notNull().unique(),
-<<<<<<< HEAD
-=======
-    password: text('password'), // Hashed password for authentication
->>>>>>> fb41bf6 (the 1.0 version)
     name: text('name'),
     phone: text('phone').unique(),
     password: text('password'),

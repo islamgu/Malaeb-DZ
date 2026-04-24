@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Alert, TextInput, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Dimensions, ActivityIndicator, Alert, TextInput, Image } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MapPin, Users, Star, ChevronLeft, ChevronRight, Heart, Send } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -129,7 +130,12 @@ export const StadiumDetailScreen: React.FC = () => {
 
     return (
         <View className="flex-1 bg-white">
-            <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 100 }}>
+            <KeyboardAwareScrollView 
+                className="flex-1" 
+                contentContainerStyle={{ paddingBottom: 100 }}
+                enableOnAndroid={true}
+                extraScrollHeight={80}
+            >
                 {/* Hero Image Gallery */}
                 <View className="relative h-80 bg-gray-200">
                     <Image source={{ uri: gallery[currentImageIndex] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
@@ -321,7 +327,7 @@ export const StadiumDetailScreen: React.FC = () => {
                         )}
                     </View>
                 </View>
-            </ScrollView>
+            </KeyboardAwareScrollView>
 
             {/* Fixed Bottom CTA */}
             <View

@@ -43,33 +43,13 @@ export const authApi = {
         return data;
     },
 
-<<<<<<< HEAD
     register: async (email: string, password: string, name: string, phone?: string) => {
         const { data } = await api.post('/auth/register', { email, password, name, phone });
-=======
-    register: async (email: string, password: string, phone?: string, name?: string) => {
-        const { data } = await api.post('/auth/register', { email, password, phone, name });
->>>>>>> fb41bf6 (the 1.0 version)
         await AsyncStorage.setItem('token', data.token);
         await AsyncStorage.setItem('user', JSON.stringify(data.user));
         return data;
     },
 
-<<<<<<< HEAD
-=======
-    verifyEmail: async () => {
-        const { data } = await api.patch('/auth/verify-email');
-        // Update stored user
-        const storedUser = await AsyncStorage.getItem('user');
-        if (storedUser) {
-            const user = JSON.parse(storedUser);
-            user.emailVerified = true;
-            await AsyncStorage.setItem('user', JSON.stringify(user));
-        }
-        return data;
-    },
-
->>>>>>> fb41bf6 (the 1.0 version)
     logout: async () => {
         await AsyncStorage.removeItem('token');
         await AsyncStorage.removeItem('user');
@@ -88,7 +68,6 @@ export const authApi = {
     getToken: async () => {
         return AsyncStorage.getItem('token');
     },
-<<<<<<< HEAD
 
     // Phone OTP methods
     sendOtp: async (phone: string) => {
@@ -108,8 +87,6 @@ export const authApi = {
         await AsyncStorage.setItem('user', JSON.stringify(data.user));
         return data;
     },
-=======
->>>>>>> fb41bf6 (the 1.0 version)
 };
 
 // ============ Stadiums ============

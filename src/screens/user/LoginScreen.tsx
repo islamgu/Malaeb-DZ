@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, Image, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, Alert, Image, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useNavigation } from '@react-navigation/native';
 import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,7 +12,7 @@ import { useTranslation } from '../../translations';
 export const LoginScreen: React.FC = () => {
     const navigation = useNavigation<any>();
     const insets = useSafeAreaInsets();
-    const { signIn } = useAuth();
+    const { login } = useAuth();
     const { t, isRTL } = useTranslation();
 
     const [email, setEmail] = useState('');
@@ -43,7 +44,7 @@ export const LoginScreen: React.FC = () => {
 
         setIsLoading(true);
         try {
-            const result = await signIn(email.trim(), password);
+            const result = await login(email.trim(), password);
 
             if (result.success) {
                 if (!result.emailVerified) {
@@ -68,22 +69,20 @@ export const LoginScreen: React.FC = () => {
     };
 
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            className="flex-1"
+        <KeyboardAwareScrollView
+            className="flex-1 bg-white"
+            contentContainerStyle={{
+                flexGrow: 1,
+                paddingTop: insets.top + 32,
+                paddingBottom: insets.bottom + 24,
+                paddingHorizontal: 24,
+                justifyContent: 'center',
+                alignItems: 'center',
+            }}
+            keyboardShouldPersistTaps="handled"
+            enableOnAndroid={true}
+            extraScrollHeight={20}
         >
-            <ScrollView
-                className="flex-1 bg-white"
-                contentContainerStyle={{
-                    flexGrow: 1,
-                    paddingTop: insets.top + 32,
-                    paddingBottom: insets.bottom + 24,
-                    paddingHorizontal: 24,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                }}
-                keyboardShouldPersistTaps="handled"
-            >
                 <View style={{ width: '100%', maxWidth: 400 }}>
                     {/* Logo */}
                     <View className="items-center mb-6">
@@ -167,7 +166,7 @@ export const LoginScreen: React.FC = () => {
 
                         {/* Info Text */}
                         <Text className="text-gray-500 text-center text-sm mt-2">
-                            {t.auth.emailLoginInfo || 'Sign in with your email and password'}
+                            {t.auth.signInToContinue || 'Sign in with your email and password'}
                         </Text>
 
                         {/* SignUp Link */}
@@ -182,7 +181,6 @@ export const LoginScreen: React.FC = () => {
                         </TouchableOpacity>
                     </View>
                 </View>
-            </ScrollView>
-        </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
     );
 };

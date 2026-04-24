@@ -2,16 +2,11 @@ import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { db } from '../db';
 import { users } from '../db/schema';
-<<<<<<< HEAD
 import { eq, or } from 'drizzle-orm';
-=======
-import { eq } from 'drizzle-orm';
->>>>>>> fb41bf6 (the 1.0 version)
 import { AuthRequest, authenticate, generateToken } from '../middleware/auth';
 
 const router = Router();
 
-<<<<<<< HEAD
 // Validate Algerian phone number format: +213 followed by 5, 6, or 7 and 8 more digits
 const isValidAlgerianPhone = (phone: string): boolean => {
     const cleaned = phone.replace(/\s/g, '');
@@ -33,10 +28,6 @@ const normalizePhone = (phone: string): string => {
 };
 
 // POST /api/auth/register
-=======
-// POST /api/auth/register - Register with email and password
-// Phone is optional. Frontend handles Firebase email verification.
->>>>>>> fb41bf6 (the 1.0 version)
 router.post('/register', async (req, res) => {
     try {
         const { email, password, name, phone } = req.body;
@@ -51,7 +42,6 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ error: 'Email already registered' });
         }
 
-<<<<<<< HEAD
         // If phone is provided, validate and check if it exists
         let normalizedPhone: string | null = null;
         if (phone) {
@@ -67,8 +57,6 @@ router.post('/register', async (req, res) => {
             }
         }
 
-=======
->>>>>>> fb41bf6 (the 1.0 version)
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -76,13 +64,9 @@ router.post('/register', async (req, res) => {
         const [newUser] = await db.insert(users).values({
             email,
             name,
-<<<<<<< HEAD
             phone: normalizedPhone,
             password: hashedPassword,
             phoneVerified: false,
-=======
-            phone: phone || null,
->>>>>>> fb41bf6 (the 1.0 version)
             role: 'USER',
             emailVerified: false,
         }).returning();
@@ -107,11 +91,7 @@ router.post('/register', async (req, res) => {
     }
 });
 
-<<<<<<< HEAD
 // POST /api/auth/login
-=======
-// POST /api/auth/login - Login with email and password
->>>>>>> fb41bf6 (the 1.0 version)
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -143,18 +123,9 @@ router.post('/login', async (req, res) => {
             });
         }
 
-<<<<<<< HEAD
         // For regular users, verify password (check both new password field and legacy phone field)
         const passwordToCheck = user.password || user.phone || '';
         const isValid = await bcrypt.compare(password, passwordToCheck);
-=======
-        // Verify password
-        if (!user.password) {
-            return res.status(401).json({ error: 'Invalid credentials. Please register first.' });
-        }
-
-        const isValid = await bcrypt.compare(password, user.password);
->>>>>>> fb41bf6 (the 1.0 version)
         if (!isValid) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
@@ -179,7 +150,6 @@ router.post('/login', async (req, res) => {
     }
 });
 
-<<<<<<< HEAD
 // POST /api/auth/send-otp - Request OTP for phone verification
 // Note: In production, this would integrate with Firebase Admin SDK or Twilio
 router.post('/send-otp', authenticate, async (req: AuthRequest, res: Response) => {
@@ -236,13 +206,6 @@ router.post('/verify-phone', authenticate, async (req: AuthRequest, res: Respons
                 phone: normalizedPhone,
                 phoneVerified: true
             })
-=======
-// PATCH /api/auth/verify-email - Mark user email as verified
-router.patch('/verify-email', authenticate, async (req: AuthRequest, res: Response) => {
-    try {
-        const [updatedUser] = await db.update(users)
-            .set({ emailVerified: true })
->>>>>>> fb41bf6 (the 1.0 version)
             .where(eq(users.id, req.user!.id))
             .returning();
 
@@ -251,7 +214,6 @@ router.patch('/verify-email', authenticate, async (req: AuthRequest, res: Respon
         }
 
         res.json({
-<<<<<<< HEAD
             success: true,
             user: {
                 id: updatedUser.id,
@@ -309,18 +271,6 @@ router.post('/phone-login', async (req, res) => {
     } catch (error) {
         console.error('Phone login error:', error);
         res.status(500).json({ error: 'Failed to login with phone' });
-=======
-            id: updatedUser.id,
-            email: updatedUser.email,
-            name: updatedUser.name,
-            phone: updatedUser.phone,
-            role: updatedUser.role,
-            emailVerified: updatedUser.emailVerified,
-        });
-    } catch (error) {
-        console.error('Verify email error:', error);
-        res.status(500).json({ error: 'Failed to verify email' });
->>>>>>> fb41bf6 (the 1.0 version)
     }
 });
 
