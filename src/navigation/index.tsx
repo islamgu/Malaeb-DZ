@@ -7,9 +7,14 @@ import { Home, Calendar, Heart, User } from 'lucide-react-native';
 // User Screens
 import { SplashScreen } from '../screens/user/SplashScreen';
 import { SignUpScreen } from '../screens/user/SignUpScreen';
+<<<<<<< HEAD
 import { PhoneLoginScreen } from '../screens/user/PhoneLoginScreen';
 import { EmailVerificationScreen } from '../screens/user/EmailVerificationScreen';
 import { PhoneEnrollmentScreen } from '../screens/user/PhoneEnrollmentScreen';
+=======
+import { LoginScreen } from '../screens/user/LoginScreen';
+import { EmailVerificationScreen } from '../screens/user/EmailVerificationScreen';
+>>>>>>> fb41bf6 (the 1.0 version)
 import { HomeScreen } from '../screens/user/HomeScreen';
 import { MapScreen } from '../screens/user/MapScreen';
 import { StadiumDetailScreen } from '../screens/user/StadiumDetailScreen';
@@ -107,9 +112,14 @@ export function Navigation() {
                 {/* Onboarding */}
                 <Stack.Screen name="Splash" component={SplashScreen} />
                 <Stack.Screen name="SignUp" component={SignUpScreen} />
+<<<<<<< HEAD
                 <Stack.Screen name="PhoneLogin" component={PhoneLoginScreen} />
                 <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
                 <Stack.Screen name="PhoneEnrollment" component={PhoneEnrollmentScreen} />
+=======
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
+>>>>>>> fb41bf6 (the 1.0 version)
 
                 {/* User Routes */}
                 <Stack.Screen name="UserTabs" component={UserTabs} />

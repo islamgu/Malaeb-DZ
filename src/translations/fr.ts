@@ -65,6 +65,7 @@ export const fr: TranslationKeys = {
         loginRequired: 'Connexion requise',
         pleaseLoginToAddFavorites: 'Veuillez vous connecter pour ajouter aux favoris',
         pleaseLoginToReview: 'Veuillez vous connecter pour laisser un avis',
+<<<<<<< HEAD
         // Phone OTP
         phone: 'Numéro de téléphone',
         phoneOptional: 'Numéro de téléphone (Optionnel)',
@@ -114,6 +115,42 @@ export const fr: TranslationKeys = {
         invalidEmail: 'Adresse email invalide.',
         weakPassword: 'Le mot de passe doit comporter au moins 6 caractères.',
         invalidCredentials: 'Email ou mot de passe invalide.',
+=======
+        // Email fields
+        enterEmail: 'Veuillez entrer votre email',
+        enterPassword: 'Veuillez entrer votre mot de passe',
+        invalidEmail: 'Veuillez entrer un email valide',
+        emailPlaceholder: 'exemple@email.com',
+        invalidCredentials: 'Identifiants invalides',
+        enterDetailsToSignUp: 'Entrez vos informations pour commencer',
+        // Email verification
+        checkYourEmail: 'Vérifiez votre email',
+        verificationLinkSent: 'Nous avons envoyé un lien de vérification à',
+        verificationEmailSent: 'Email de vérification envoyé !',
+        verificationEmailInfo: 'Nous vous enverrons un lien de vérification par email',
+        emailLoginInfo: 'Connectez-vous avec votre email et mot de passe',
+        iVerifiedMyEmail: 'J\'ai vérifié mon email',
+        openEmailApp: 'Ouvrir l\'application email',
+        resendEmail: 'Renvoyer l\'email',
+        resendIn: 'Renvoyer dans',
+        emailNotVerified: 'Email non vérifié',
+        pleaseVerifyEmail: 'Veuillez d\'abord cliquer sur le lien de vérification dans votre email.',
+        failedToSendEmail: 'Échec de l\'envoi de l\'email de vérification',
+        checkSpamFolder: 'Vous n\'avez pas reçu l\'email ? Vérifiez votre dossier spam.',
+        // Legacy
+        phoneNumber: 'Numéro de téléphone',
+        enterValidPhone: 'Veuillez entrer un numéro de téléphone valide',
+        sendOTP: 'Envoyer OTP',
+        otpInfo: 'Nous vous enverrons un code de vérification par SMS',
+        failedToSendOTP: 'Échec de l\'envoi du code de vérification',
+        verifyPhone: 'Vérifier le téléphone',
+        enterCodeSentTo: 'Entrez le code envoyé au',
+        enterValidCode: 'Veuillez entrer le code à 6 chiffres',
+        invalidCode: 'Code de vérification invalide',
+        verify: 'Vérifier',
+        resendCode: 'Renvoyer le code',
+        codeSent: 'Code de vérification envoyé !',
+>>>>>>> fb41bf6 (the 1.0 version)
     },
 
     // Home
@@ -294,6 +331,9 @@ export const fr: TranslationKeys = {
         selectAll: 'Tout sélectionner',
         clearAll: 'Tout effacer',
         saveAvailability: 'Enregistrer la disponibilité',
+        selectFromMap: 'Sélectionner sur la carte',
+        selectLocation: 'Sélectionner l\'emplacement',
+        confirmLocation: 'Confirmer l\'emplacement',
     },
 
     // Reviews

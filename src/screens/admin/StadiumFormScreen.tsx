@@ -158,12 +158,18 @@ export const StadiumFormScreen: React.FC = () => {
                 facilities: formData.facilities,
             };
 
+            console.log('📍 Submitting stadium data:', JSON.stringify(stadiumData, null, 2));
+
             let savedStadium;
             if (id) {
+                console.log(`🔄 Updating existing stadium with ID: ${id}`);
                 savedStadium = await stadiumsApi.update(id, stadiumData);
             } else {
+                console.log('✨ Creating new stadium');
                 savedStadium = await stadiumsApi.create(stadiumData);
             }
+
+            console.log('✅ Stadium saved successfully:', savedStadium);
 
             // Upload images if any
             if (images.length > 0) {
@@ -179,8 +185,11 @@ export const StadiumFormScreen: React.FC = () => {
             }
 
             setShowSuccess(true);
-        } catch (error) {
-            Alert.alert(t.common.error, t.errors.failedToSave);
+        } catch (error: any) {
+            console.error('❌ Stadium creation/update failed:', error);
+            console.error('Error details:', error.response?.data || error.message);
+            const errorMessage = error.response?.data?.error || error.message || t.errors.failedToSave;
+            Alert.alert(t.common.error, `${t.errors.failedToSave}\n\nDetails: ${errorMessage}`);
         } finally {
             setIsSaving(false);
         }

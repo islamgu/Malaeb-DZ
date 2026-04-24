@@ -1,7 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+<<<<<<< HEAD
 import { Mail, Lock, User, Phone, Smartphone } from 'lucide-react-native';
+=======
+import { Mail, Lock, Eye, EyeOff, UserPlus } from 'lucide-react-native';
+>>>>>>> fb41bf6 (the 1.0 version)
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -12,24 +16,54 @@ import { createFirebaseUser, sendEmailVerification } from '../../services/fireba
 export const SignUpScreen: React.FC = () => {
     const navigation = useNavigation<any>();
     const insets = useSafeAreaInsets();
+<<<<<<< HEAD
     const { login } = useAuth();
+=======
+    const { signUp } = useAuth();
+>>>>>>> fb41bf6 (the 1.0 version)
     const { t, isRTL } = useTranslation();
     const scrollViewRef = useRef<ScrollView>(null);
 
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+<<<<<<< HEAD
     const [name, setName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async () => {
         if (!email || !password) {
             Alert.alert(t.common.error, t.auth.fillAllFields);
+=======
+    const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const validateEmail = (email: string) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    };
+
+    const handleSubmit = async () => {
+        // Validate email
+        if (!email.trim()) {
+            Alert.alert(t.common.error, t.auth.enterEmail || 'Please enter your email');
+            return;
+        }
+        if (!validateEmail(email.trim())) {
+            Alert.alert(t.common.error, t.auth.invalidEmail || 'Please enter a valid email');
+            return;
+        }
+
+        // Validate password
+        if (!password || password.length < 4) {
+            Alert.alert(t.common.error, t.auth.passwordMinLength || 'Password must be at least 4 characters');
+>>>>>>> fb41bf6 (the 1.0 version)
             return;
         }
 
         setIsLoading(true);
         try {
+<<<<<<< HEAD
             if (isLogin) {
                 // Login flow
                 const result = await login(email, password);
@@ -62,6 +96,16 @@ export const SignUpScreen: React.FC = () => {
                     email,
                     userData: { name, email, password }
                 });
+=======
+            const result = await signUp(email.trim(), password);
+
+            if (result.success) {
+                navigation.navigate('EmailVerification', {
+                    email: email.trim(),
+                });
+            } else {
+                Alert.alert(t.common.error, result.error || t.auth.authFailed || 'Failed to create account');
+>>>>>>> fb41bf6 (the 1.0 version)
             }
         } catch (error: any) {
             console.error('Auth error:', error);
@@ -151,6 +195,7 @@ export const SignUpScreen: React.FC = () => {
                             />
                         </View>
 
+<<<<<<< HEAD
                         <View>
                             <Text className="text-sm text-gray-700 mb-2">{t.auth.password}</Text>
                             <Input
@@ -163,6 +208,21 @@ export const SignUpScreen: React.FC = () => {
                                 <Text className="text-xs text-gray-500 mt-1">
                                     {t.auth.passwordHint || 'At least 6 characters'}
                                 </Text>
+=======
+                        <Button
+                            onPress={handleSubmit}
+                            disabled={isLoading || !email.trim() || password.length < 4}
+                        >
+                            {isLoading ? (
+                                <ActivityIndicator color="white" />
+                            ) : (
+                                <View className="flex-row items-center">
+                                    <UserPlus size={20} color="white" />
+                                    <Text className="text-white font-semibold ml-2">
+                                        {t.auth.signUp || 'Sign Up'}
+                                    </Text>
+                                </View>
+>>>>>>> fb41bf6 (the 1.0 version)
                             )}
                         </View>
 
@@ -190,6 +250,7 @@ export const SignUpScreen: React.FC = () => {
                             </View>
                         </Button>
 
+<<<<<<< HEAD
                         {/* Divider with "or continue with" text */}
                         {isLogin && (
                             <>
@@ -198,6 +259,12 @@ export const SignUpScreen: React.FC = () => {
                                     <Text className="mx-4 text-gray-500 text-sm">{t.auth.orContinueWith}</Text>
                                     <View className="flex-1 h-[1px] bg-gray-200" />
                                 </View>
+=======
+                        {/* Info Text */}
+                        <Text className="text-gray-500 text-center text-sm mt-2">
+                            {t.auth.verificationEmailInfo || 'We will send you a verification link via email'}
+                        </Text>
+>>>>>>> fb41bf6 (the 1.0 version)
 
                                 {/* Phone Login Option */}
                                 <TouchableOpacity

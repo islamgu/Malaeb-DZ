@@ -65,6 +65,7 @@ export const ar: TranslationKeys = {
         loginRequired: 'يجب تسجيل الدخول',
         pleaseLoginToAddFavorites: 'يرجى تسجيل الدخول لإضافة المفضلات',
         pleaseLoginToReview: 'يرجى تسجيل الدخول لكتابة تقييم',
+<<<<<<< HEAD
         // Phone OTP
         phone: 'رقم الهاتف',
         phoneOptional: 'رقم الهاتف (اختياري)',
@@ -114,6 +115,42 @@ export const ar: TranslationKeys = {
         invalidEmail: 'عنوان بريد غير صالح.',
         weakPassword: 'يجب أن تكون كلمة المرور ٦ أحرف على الأقل.',
         invalidCredentials: 'بريد أو كلمة مرور غير صحيحة.',
+=======
+        // Email fields
+        enterEmail: 'يرجى إدخال بريدك الإلكتروني',
+        enterPassword: 'يرجى إدخال كلمة المرور',
+        invalidEmail: 'يرجى إدخال بريد إلكتروني صالح',
+        emailPlaceholder: 'example@email.com',
+        invalidCredentials: 'بيانات الدخول غير صحيحة',
+        enterDetailsToSignUp: 'أدخل بياناتك للبدء',
+        // Email verification
+        checkYourEmail: 'تحقق من بريدك الإلكتروني',
+        verificationLinkSent: 'أرسلنا رابط التحقق إلى',
+        verificationEmailSent: 'تم إرسال بريد التحقق!',
+        verificationEmailInfo: 'سنرسل لك رابط تحقق عبر البريد الإلكتروني',
+        emailLoginInfo: 'سجل الدخول ببريدك الإلكتروني وكلمة المرور',
+        iVerifiedMyEmail: 'لقد تحققت من بريدي الإلكتروني',
+        openEmailApp: 'فتح تطبيق البريد',
+        resendEmail: 'إعادة إرسال البريد',
+        resendIn: 'إعادة الإرسال بعد',
+        emailNotVerified: 'البريد الإلكتروني غير مُحقق',
+        pleaseVerifyEmail: 'يرجى النقر على رابط التحقق في بريدك الإلكتروني أولاً.',
+        failedToSendEmail: 'فشل إرسال بريد التحقق',
+        checkSpamFolder: 'لم تتلق البريد؟ تحقق من مجلد البريد العشوائي.',
+        // Legacy
+        phoneNumber: 'رقم الهاتف',
+        enterValidPhone: 'يرجى إدخال رقم هاتف صالح',
+        sendOTP: 'إرسال رمز التحقق',
+        otpInfo: 'سنرسل لك رمز التحقق عبر الرسائل النصية',
+        failedToSendOTP: 'فشل إرسال رمز التحقق',
+        verifyPhone: 'تحقق من الهاتف',
+        enterCodeSentTo: 'أدخل الرمز المرسل إلى',
+        enterValidCode: 'يرجى إدخال الرمز المكون من 6 أرقام',
+        invalidCode: 'رمز التحقق غير صالح',
+        verify: 'تحقق',
+        resendCode: 'إعادة إرسال الرمز',
+        codeSent: 'تم إرسال رمز التحقق!',
+>>>>>>> fb41bf6 (the 1.0 version)
     },
 
     // Home
@@ -294,6 +331,9 @@ export const ar: TranslationKeys = {
         selectAll: 'اختر الكل',
         clearAll: 'مسح الكل',
         saveAvailability: 'حفظ التوفر',
+        selectFromMap: 'اختر من الخريطة',
+        selectLocation: 'اختر الموقع',
+        confirmLocation: 'تأكيد الموقع',
     },
 
     // Reviews

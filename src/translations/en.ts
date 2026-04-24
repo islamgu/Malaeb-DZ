@@ -63,6 +63,7 @@ export const en = {
         loginRequired: 'Login Required',
         pleaseLoginToAddFavorites: 'Please login to add favorites',
         pleaseLoginToReview: 'Please login to leave a review',
+<<<<<<< HEAD
         // Phone OTP
         phone: 'Phone Number',
         phoneOptional: 'Phone Number (Optional)',
@@ -112,6 +113,42 @@ export const en = {
         invalidEmail: 'Invalid email address.',
         weakPassword: 'Password should be at least 6 characters.',
         invalidCredentials: 'Invalid email or password.',
+=======
+        // Email fields
+        enterEmail: 'Please enter your email',
+        enterPassword: 'Please enter your password',
+        invalidEmail: 'Please enter a valid email',
+        emailPlaceholder: 'example@email.com',
+        invalidCredentials: 'Invalid credentials',
+        enterDetailsToSignUp: 'Enter your details to get started',
+        // Email verification
+        checkYourEmail: 'Check Your Email',
+        verificationLinkSent: 'We sent a verification link to',
+        verificationEmailSent: 'Verification email sent!',
+        verificationEmailInfo: 'We will send you a verification link via email',
+        emailLoginInfo: 'Sign in with your email and password',
+        iVerifiedMyEmail: "I've Verified My Email",
+        openEmailApp: 'Open Email App',
+        resendEmail: 'Resend Email',
+        resendIn: 'Resend in',
+        emailNotVerified: 'Email Not Verified',
+        pleaseVerifyEmail: 'Please click the verification link in your email first.',
+        failedToSendEmail: 'Failed to send verification email',
+        checkSpamFolder: "Didn't receive the email? Check your spam folder.",
+        // Legacy - kept for backward compat
+        phoneNumber: 'Phone Number',
+        enterValidPhone: 'Please enter a valid phone number',
+        sendOTP: 'Send OTP',
+        otpInfo: 'We will send you a verification code via SMS',
+        failedToSendOTP: 'Failed to send verification code',
+        verifyPhone: 'Verify Phone',
+        enterCodeSentTo: 'Enter the code sent to',
+        enterValidCode: 'Please enter the 6-digit code',
+        invalidCode: 'Invalid verification code',
+        verify: 'Verify',
+        resendCode: 'Resend Code',
+        codeSent: 'Verification code sent!',
+>>>>>>> fb41bf6 (the 1.0 version)
     },
 
     // Home
@@ -292,6 +329,9 @@ export const en = {
         selectAll: 'Select All',
         clearAll: 'Clear All',
         saveAvailability: 'Save Availability',
+        selectFromMap: 'Select from Map',
+        selectLocation: 'Select Location',
+        confirmLocation: 'Confirm Location',
     },
 
     // Reviews

@@ -1,0 +1,6 @@
+{
+    "react-native": {
+        "auth_phone_auto_verify_timeout": 60,
+        "auth_android_recaptcha_flow_force": true
+    }
+}
