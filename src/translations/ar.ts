@@ -65,13 +65,30 @@ export const ar: TranslationKeys = {
         loginRequired: 'يجب تسجيل الدخول',
         pleaseLoginToAddFavorites: 'يرجى تسجيل الدخول لإضافة المفضلات',
         pleaseLoginToReview: 'يرجى تسجيل الدخول لكتابة تقييم',
-        // Phone & OTP
-        phoneNumber: 'رقم الهاتف',
+        // Email fields
         enterEmail: 'يرجى إدخال بريدك الإلكتروني',
         enterPassword: 'يرجى إدخال كلمة المرور',
         invalidEmail: 'يرجى إدخال بريد إلكتروني صالح',
-        enterValidPhone: 'يرجى إدخال رقم هاتف صالح',
         emailPlaceholder: 'example@email.com',
+        invalidCredentials: 'بيانات الدخول غير صحيحة',
+        enterDetailsToSignUp: 'أدخل بياناتك للبدء',
+        // Email verification
+        checkYourEmail: 'تحقق من بريدك الإلكتروني',
+        verificationLinkSent: 'أرسلنا رابط التحقق إلى',
+        verificationEmailSent: 'تم إرسال بريد التحقق!',
+        verificationEmailInfo: 'سنرسل لك رابط تحقق عبر البريد الإلكتروني',
+        emailLoginInfo: 'سجل الدخول ببريدك الإلكتروني وكلمة المرور',
+        iVerifiedMyEmail: 'لقد تحققت من بريدي الإلكتروني',
+        openEmailApp: 'فتح تطبيق البريد',
+        resendEmail: 'إعادة إرسال البريد',
+        resendIn: 'إعادة الإرسال بعد',
+        emailNotVerified: 'البريد الإلكتروني غير مُحقق',
+        pleaseVerifyEmail: 'يرجى النقر على رابط التحقق في بريدك الإلكتروني أولاً.',
+        failedToSendEmail: 'فشل إرسال بريد التحقق',
+        checkSpamFolder: 'لم تتلق البريد؟ تحقق من مجلد البريد العشوائي.',
+        // Legacy
+        phoneNumber: 'رقم الهاتف',
+        enterValidPhone: 'يرجى إدخال رقم هاتف صالح',
         sendOTP: 'إرسال رمز التحقق',
         otpInfo: 'سنرسل لك رمز التحقق عبر الرسائل النصية',
         failedToSendOTP: 'فشل إرسال رمز التحقق',
@@ -81,10 +98,7 @@ export const ar: TranslationKeys = {
         invalidCode: 'رمز التحقق غير صالح',
         verify: 'تحقق',
         resendCode: 'إعادة إرسال الرمز',
-        resendIn: 'إعادة الإرسال بعد',
         codeSent: 'تم إرسال رمز التحقق!',
-        invalidCredentials: 'بيانات الدخول غير صحيحة',
-        enterDetailsToSignUp: 'أدخل بياناتك للبدء',
     },
 
     // Home
@@ -265,6 +279,9 @@ export const ar: TranslationKeys = {
         selectAll: 'اختر الكل',
         clearAll: 'مسح الكل',
         saveAvailability: 'حفظ التوفر',
+        selectFromMap: 'اختر من الخريطة',
+        selectLocation: 'اختر الموقع',
+        confirmLocation: 'تأكيد الموقع',
     },
 
     // Reviews

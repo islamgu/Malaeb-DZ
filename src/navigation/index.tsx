@@ -8,7 +8,7 @@ import { Home, Calendar, Heart, User } from 'lucide-react-native';
 import { SplashScreen } from '../screens/user/SplashScreen';
 import { SignUpScreen } from '../screens/user/SignUpScreen';
 import { LoginScreen } from '../screens/user/LoginScreen';
-import { OTPVerificationScreen } from '../screens/user/OTPVerificationScreen';
+import { EmailVerificationScreen } from '../screens/user/EmailVerificationScreen';
 import { HomeScreen } from '../screens/user/HomeScreen';
 import { MapScreen } from '../screens/user/MapScreen';
 import { StadiumDetailScreen } from '../screens/user/StadiumDetailScreen';
@@ -107,7 +107,7 @@ export function Navigation() {
                 <Stack.Screen name="Splash" component={SplashScreen} />
                 <Stack.Screen name="SignUp" component={SignUpScreen} />
                 <Stack.Screen name="Login" component={LoginScreen} />
-                <Stack.Screen name="OTPVerification" component={OTPVerificationScreen} />
+                <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
 
                 {/* User Routes */}
                 <Stack.Screen name="UserTabs" component={UserTabs} />

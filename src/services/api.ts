@@ -27,22 +27,29 @@ api.interceptors.request.use(async (config) => {
 // ============ Auth ============
 
 export const authApi = {
-    login: async (email: string, password: string, phone?: string) => {
-        const { data } = await api.post('/auth/login', { email, password, phone });
+    login: async (email: string, password: string) => {
+        const { data } = await api.post('/auth/login', { email, password });
         await AsyncStorage.setItem('token', data.token);
         await AsyncStorage.setItem('user', JSON.stringify(data.user));
         return data;
     },
 
-    register: async (email: string, password: string, phone: string, name?: string) => {
+    register: async (email: string, password: string, phone?: string, name?: string) => {
         const { data } = await api.post('/auth/register', { email, password, phone, name });
         await AsyncStorage.setItem('token', data.token);
         await AsyncStorage.setItem('user', JSON.stringify(data.user));
         return data;
     },
 
-    verifyCredentials: async (email: string, password: string, phone: string) => {
-        const { data } = await api.post('/auth/verify-credentials', { email, password, phone });
+    verifyEmail: async () => {
+        const { data } = await api.patch('/auth/verify-email');
+        // Update stored user
+        const storedUser = await AsyncStorage.getItem('user');
+        if (storedUser) {
+            const user = JSON.parse(storedUser);
+            user.emailVerified = true;
+            await AsyncStorage.setItem('user', JSON.stringify(user));
+        }
         return data;
     },
 
@@ -63,13 +70,6 @@ export const authApi = {
 
     getToken: async () => {
         return AsyncStorage.getItem('token');
-    },
-
-    phoneLogin: async (phoneNumber: string, email?: string) => {
-        const { data } = await api.post('/auth/phone-login', { phone: phoneNumber, email });
-        await AsyncStorage.setItem('token', data.token);
-        await AsyncStorage.setItem('user', JSON.stringify(data.user));
-        return data;
     },
 };
 

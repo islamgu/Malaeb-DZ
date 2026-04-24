@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, Image, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Phone, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, UserPlus } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -11,29 +11,13 @@ import { useTranslation } from '../../translations';
 export const SignUpScreen: React.FC = () => {
     const navigation = useNavigation<any>();
     const insets = useSafeAreaInsets();
-    const { sendOTP } = useAuth();
+    const { signUp } = useAuth();
     const { t, isRTL } = useTranslation();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [phoneNumber, setPhoneNumber] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-
-    const formatPhoneDisplay = (phone: string) => {
-        // Remove non-digits
-        const digits = phone.replace(/\D/g, '');
-        // Format as XXX XXX XXX
-        if (digits.length <= 3) return digits;
-        if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
-        return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 9)}`;
-    };
-
-    const handlePhoneChange = (text: string) => {
-        // Keep only digits, max 9 characters (Algerian format without country code)
-        const digits = text.replace(/\D/g, '').slice(0, 9);
-        setPhoneNumber(digits);
-    };
 
     const validateEmail = (email: string) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -57,29 +41,16 @@ export const SignUpScreen: React.FC = () => {
             return;
         }
 
-        // Validate phone
-        if (phoneNumber.length < 9) {
-            Alert.alert(t.common.error, t.auth.enterValidPhone || 'Please enter a valid phone number');
-            return;
-        }
-
         setIsLoading(true);
         try {
-            // Format for E.164 (Algeria: +213)
-            const formattedPhone = '+213' + phoneNumber.replace(/^0/, '');
+            const result = await signUp(email.trim(), password);
 
-            const result = await sendOTP(formattedPhone);
-
-            if (result.success && result.verificationId) {
-                navigation.navigate('OTPVerification', {
-                    verificationId: result.verificationId,
-                    phoneNumber: formattedPhone,
+            if (result.success) {
+                navigation.navigate('EmailVerification', {
                     email: email.trim(),
-                    password: password,
-                    isSignUp: true,
                 });
             } else {
-                Alert.alert(t.common.error, result.error || t.auth.failedToSendOTP || 'Failed to send OTP');
+                Alert.alert(t.common.error, result.error || t.auth.authFailed || 'Failed to create account');
             }
         } catch (error) {
             Alert.alert(t.common.error, t.auth.somethingWentWrong);
@@ -170,40 +141,17 @@ export const SignUpScreen: React.FC = () => {
                             </View>
                         </View>
 
-                        {/* Phone Input */}
-                        <View>
-                            <Text className="text-sm text-gray-700 mb-2">
-                                {t.auth.phoneNumber || 'Phone Number'}
-                            </Text>
-                            <View className="flex-row items-center">
-                                {/* Country Code */}
-                                <View className="bg-gray-100 rounded-xl px-4 py-4 mr-2 flex-row items-center">
-                                    <Text className="text-lg font-semibold text-foreground">🇩🇿 +213</Text>
-                                </View>
-                                {/* Phone Input */}
-                                <View className="flex-1">
-                                    <Input
-                                        value={formatPhoneDisplay(phoneNumber)}
-                                        onChangeText={handlePhoneChange}
-                                        placeholder="XXX XXX XXX"
-                                        keyboardType="phone-pad"
-                                        maxLength={11} // 9 digits + 2 spaces
-                                    />
-                                </View>
-                            </View>
-                        </View>
-
                         <Button
                             onPress={handleSubmit}
-                            disabled={isLoading || phoneNumber.length < 9 || !email.trim() || password.length < 4}
+                            disabled={isLoading || !email.trim() || password.length < 4}
                         >
                             {isLoading ? (
                                 <ActivityIndicator color="white" />
                             ) : (
                                 <View className="flex-row items-center">
-                                    <Phone size={20} color="white" />
+                                    <UserPlus size={20} color="white" />
                                     <Text className="text-white font-semibold ml-2">
-                                        {t.auth.sendOTP || 'Send OTP'}
+                                        {t.auth.signUp || 'Sign Up'}
                                     </Text>
                                 </View>
                             )}
@@ -211,7 +159,7 @@ export const SignUpScreen: React.FC = () => {
 
                         {/* Info Text */}
                         <Text className="text-gray-500 text-center text-sm mt-2">
-                            {t.auth.otpInfo || 'We will send you a verification code via SMS'}
+                            {t.auth.verificationEmailInfo || 'We will send you a verification link via email'}
                         </Text>
 
                         {/* Login Link */}

@@ -3,21 +3,13 @@ import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authApi } from '../services/api';
 
-// Real SMS verification - no test bypass
-
 export interface User {
     id: string;
     email: string;
     name: string | null;
     phone: string | null;
     role: 'USER' | 'ADMIN' | 'PREMIUM';
-}
-
-interface VerifyOTPOptions {
-    email?: string;
-    password?: string;
-    phoneNumber?: string;
-    isSignUp?: boolean;
+    emailVerified: boolean;
 }
 
 interface AuthContextType {
@@ -26,9 +18,10 @@ interface AuthContextType {
     isLoading: boolean;
     isAuthenticated: boolean;
     isAdmin: boolean;
-    sendOTP: (phoneNumber: string) => Promise<{ success: boolean; verificationId?: string; error?: string }>;
-    verifyCredentials: (email: string, password: string, phone: string) => Promise<{ success: boolean; isAdmin?: boolean; error?: string }>;
-    verifyOTP: (verificationId: string, code: string, options?: VerifyOTPOptions) => Promise<{ success: boolean; isAdmin?: boolean; error?: string }>;
+    signUp: (email: string, password: string, name?: string) => Promise<{ success: boolean; error?: string }>;
+    signIn: (email: string, password: string) => Promise<{ success: boolean; isAdmin?: boolean; emailVerified?: boolean; error?: string }>;
+    sendVerificationEmail: () => Promise<{ success: boolean; error?: string }>;
+    checkEmailVerified: () => Promise<{ verified: boolean; error?: string }>;
     logout: () => Promise<void>;
 }
 
@@ -51,7 +44,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     setUser(storedUser);
                 }
             } else {
-                setUser(null);
+                // Check for stored user even without Firebase user (for test mode)
+                const storedUser = await authApi.getStoredUser();
+                if (storedUser) {
+                    setUser(storedUser);
+                } else {
+                    setUser(null);
+                }
             }
 
             setIsLoading(false);
@@ -78,98 +77,151 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    const sendOTP = async (phoneNumber: string) => {
+    // Sign up with email and password, then send verification email
+    const signUp = async (email: string, password: string, name?: string) => {
         try {
-            // Ensure phone number is in E.164 format
-            let formattedPhone = phoneNumber.trim();
-            if (!formattedPhone.startsWith('+')) {
-                formattedPhone = '+213' + formattedPhone.replace(/^0/, '');
+            // Create Firebase account
+            const userCredential = await auth().createUserWithEmailAndPassword(email, password);
+
+            // Send verification email
+            await userCredential.user.sendEmailVerification();
+
+            // Register with backend
+            try {
+                const result = await authApi.register(email, password, undefined, name);
+                setUser(result.user);
+            } catch (backendError: any) {
+                console.error('Backend register error:', backendError);
+                // Still return success since Firebase account was created
             }
 
-            // Send real OTP via Firebase
-            const confirmation = await auth().signInWithPhoneNumber(formattedPhone);
-            return {
-                success: true,
-                verificationId: confirmation.verificationId || undefined
-            };
+            return { success: true };
         } catch (error: any) {
-            console.error('Send OTP error:', error);
-            let errorMessage = 'Failed to send verification code';
+            console.error('Sign up error:', error.code, error.message);
+            let errorMessage = 'Failed to create account';
+            if (error.code === 'auth/email-already-in-use') {
+                errorMessage = 'This email is already registered';
+            } else if (error.code === 'auth/invalid-email') {
+                errorMessage = 'Invalid email address';
+            } else if (error.code === 'auth/weak-password') {
+                errorMessage = 'Password is too weak';
+            }
+            return { success: false, error: errorMessage };
+        }
+    };
 
-            if (error.code === 'auth/invalid-phone-number') {
-                errorMessage = 'Invalid phone number format';
+    // Sign in with email and password
+    const signIn = async (email: string, password: string) => {
+        try {
+            // Admin Bypass: skip Firebase completely
+            if (email === 'admin@gmail.com' && password === '1234') {
+                try {
+                    const result = await authApi.login(email, password);
+                    setUser({ ...result.user, emailVerified: true });
+                    return {
+                        success: true,
+                        isAdmin: true,
+                        emailVerified: true,
+                    };
+                } catch (backendError: any) {
+                    return {
+                        success: false,
+                        error: backendError.response?.data?.error || 'Invalid admin credentials',
+                    };
+                }
+            }
+
+            // Sign in with Firebase
+            const userCredential = await auth().signInWithEmailAndPassword(email, password);
+            const isEmailVerified = userCredential.user.emailVerified;
+
+            // Login with backend
+            try {
+                const result = await authApi.login(email, password);
+
+                // If Firebase says verified, update backend too
+                if (isEmailVerified && !result.user.emailVerified) {
+                    try {
+                        const updatedUser = await authApi.verifyEmail();
+                        setUser({ ...result.user, emailVerified: true });
+                    } catch (e) {
+                        console.error('Failed to sync email verification:', e);
+                    }
+                } else {
+                    setUser(result.user);
+                }
+
+                return {
+                    success: true,
+                    isAdmin: result.user.role === 'ADMIN',
+                    emailVerified: isEmailVerified,
+                };
+            } catch (backendError: any) {
+                console.error('Backend login error:', backendError);
+                return {
+                    success: false,
+                    error: backendError.response?.data?.error || 'Invalid credentials',
+                };
+            }
+
+        } catch (error: any) {
+            console.error('Sign in error:', error.code, error.message);
+            let errorMessage = 'Invalid credentials';
+            if (error.code === 'auth/user-not-found') {
+                errorMessage = 'No account found with this email';
+            } else if (error.code === 'auth/wrong-password') {
+                errorMessage = 'Invalid password';
+            } else if (error.code === 'auth/invalid-email') {
+                errorMessage = 'Invalid email address';
             } else if (error.code === 'auth/too-many-requests') {
                 errorMessage = 'Too many attempts. Please try again later';
-            } else if (error.code === 'auth/quota-exceeded') {
-                errorMessage = 'SMS quota exceeded. Please try again later';
-            } else if (error.code === 'auth/app-not-authorized') {
-                errorMessage = 'App not authorized. Please check Firebase configuration.';
             }
-
             return { success: false, error: errorMessage };
         }
     };
 
-    // Verify email, password, and phone with backend before OTP (for login)
-    const verifyCredentials = async (email: string, password: string, phone: string) => {
+    // Send/resend verification email
+    const sendVerificationEmail = async () => {
         try {
-            const result = await authApi.verifyCredentials(email, password, phone);
-            return {
-                success: true,
-                isAdmin: result.isAdmin,
-            };
+            const currentUser = auth().currentUser;
+            if (!currentUser) {
+                return { success: false, error: 'No user signed in' };
+            }
+            await currentUser.sendEmailVerification();
+            return { success: true };
         } catch (error: any) {
-            console.error('Verify credentials error:', error);
-            return {
-                success: false,
-                error: error.message || 'Invalid credentials',
-            };
+            console.error('Send verification email error:', error);
+            return { success: false, error: error.message || 'Failed to send verification email' };
         }
     };
 
-    const verifyOTP = async (verificationId: string, code: string, options?: VerifyOTPOptions) => {
-        const { email, password, phoneNumber, isSignUp } = options || {};
-
+    // Check if email is verified (reloads Firebase user)
+    const checkEmailVerified = async () => {
         try {
-            // Create credential and sign in
-            const credential = auth.PhoneAuthProvider.credential(verificationId, code);
-            const userCredential = await auth().signInWithCredential(credential);
+            const currentUser = auth().currentUser;
+            if (!currentUser) {
+                return { verified: false, error: 'No user signed in' };
+            }
 
-            const verifiedPhone = userCredential.user.phoneNumber || phoneNumber || '';
+            // Reload to get latest status from Firebase
+            await currentUser.reload();
+            const updatedUser = auth().currentUser;
+            const verified = updatedUser?.emailVerified ?? false;
 
-            // Sync with backend
-            try {
-                if (isSignUp && email && password) {
-                    // Register new user
-                    const result = await authApi.register(email, password, verifiedPhone);
-                    setUser(result.user);
-                    return { success: true, isAdmin: result.user.role === 'ADMIN' };
-                } else if (email && password) {
-                    // Login existing user
-                    const result = await authApi.login(email, password, verifiedPhone);
-                    setUser(result.user);
-                    return { success: true, isAdmin: result.user.role === 'ADMIN' };
-                } else {
-                    // Fallback to phone-only login
-                    const result = await authApi.phoneLogin(verifiedPhone, email);
-                    setUser(result.user);
-                    return { success: true, isAdmin: result.user.role === 'ADMIN' };
+            if (verified) {
+                // Sync with backend
+                try {
+                    const updatedBackendUser = await authApi.verifyEmail();
+                    setUser(prev => prev ? { ...prev, emailVerified: true } : prev);
+                } catch (e) {
+                    console.error('Failed to sync email verification with backend:', e);
                 }
-            } catch (backendError) {
-                console.error('Backend sync error:', backendError);
-                return { success: true, isAdmin: false };
             }
+
+            return { verified };
         } catch (error: any) {
-            console.error('Verify OTP error:', error);
-            let errorMessage = 'Invalid verification code';
-
-            if (error.code === 'auth/invalid-verification-code') {
-                errorMessage = 'Invalid code. Please check and try again';
-            } else if (error.code === 'auth/session-expired') {
-                errorMessage = 'Code expired. Please request a new one';
-            }
-
-            return { success: false, error: errorMessage };
+            console.error('Check email verified error:', error);
+            return { verified: false, error: error.message || 'Failed to check verification' };
         }
     };
 
@@ -192,9 +244,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 isLoading,
                 isAuthenticated: !!user || !!firebaseUser,
                 isAdmin: user?.role === 'ADMIN',
-                sendOTP,
-                verifyCredentials,
-                verifyOTP,
+                signUp,
+                signIn,
+                sendVerificationEmail,
+                checkEmailVerified,
                 logout,
             }}
         >

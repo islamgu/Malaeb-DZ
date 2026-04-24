@@ -65,13 +65,30 @@ export const fr: TranslationKeys = {
         loginRequired: 'Connexion requise',
         pleaseLoginToAddFavorites: 'Veuillez vous connecter pour ajouter aux favoris',
         pleaseLoginToReview: 'Veuillez vous connecter pour laisser un avis',
-        // Phone & OTP
-        phoneNumber: 'Numéro de téléphone',
+        // Email fields
         enterEmail: 'Veuillez entrer votre email',
         enterPassword: 'Veuillez entrer votre mot de passe',
         invalidEmail: 'Veuillez entrer un email valide',
-        enterValidPhone: 'Veuillez entrer un numéro de téléphone valide',
         emailPlaceholder: 'exemple@email.com',
+        invalidCredentials: 'Identifiants invalides',
+        enterDetailsToSignUp: 'Entrez vos informations pour commencer',
+        // Email verification
+        checkYourEmail: 'Vérifiez votre email',
+        verificationLinkSent: 'Nous avons envoyé un lien de vérification à',
+        verificationEmailSent: 'Email de vérification envoyé !',
+        verificationEmailInfo: 'Nous vous enverrons un lien de vérification par email',
+        emailLoginInfo: 'Connectez-vous avec votre email et mot de passe',
+        iVerifiedMyEmail: 'J\'ai vérifié mon email',
+        openEmailApp: 'Ouvrir l\'application email',
+        resendEmail: 'Renvoyer l\'email',
+        resendIn: 'Renvoyer dans',
+        emailNotVerified: 'Email non vérifié',
+        pleaseVerifyEmail: 'Veuillez d\'abord cliquer sur le lien de vérification dans votre email.',
+        failedToSendEmail: 'Échec de l\'envoi de l\'email de vérification',
+        checkSpamFolder: 'Vous n\'avez pas reçu l\'email ? Vérifiez votre dossier spam.',
+        // Legacy
+        phoneNumber: 'Numéro de téléphone',
+        enterValidPhone: 'Veuillez entrer un numéro de téléphone valide',
         sendOTP: 'Envoyer OTP',
         otpInfo: 'Nous vous enverrons un code de vérification par SMS',
         failedToSendOTP: 'Échec de l\'envoi du code de vérification',
@@ -81,10 +98,7 @@ export const fr: TranslationKeys = {
         invalidCode: 'Code de vérification invalide',
         verify: 'Vérifier',
         resendCode: 'Renvoyer le code',
-        resendIn: 'Renvoyer le code dans',
         codeSent: 'Code de vérification envoyé !',
-        invalidCredentials: 'Identifiants invalides',
-        enterDetailsToSignUp: 'Entrez vos informations pour commencer',
     },
 
     // Home
@@ -265,6 +279,9 @@ export const fr: TranslationKeys = {
         selectAll: 'Tout sélectionner',
         clearAll: 'Tout effacer',
         saveAvailability: 'Enregistrer la disponibilité',
+        selectFromMap: 'Sélectionner sur la carte',
+        selectLocation: 'Sélectionner l\'emplacement',
+        confirmLocation: 'Confirmer l\'emplacement',
     },
 
     // Reviews
