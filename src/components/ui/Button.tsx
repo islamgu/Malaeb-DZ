@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import { useApp } from '../../context/AppContext';
 
 interface ButtonProps {
     children: React.ReactNode;
@@ -24,6 +25,7 @@ export const Button: React.FC<ButtonProps> = ({
     style,
     textStyle,
 }) => {
+    const { theme } = useApp();
     const getBaseClasses = () => {
         let classes = 'flex-row items-center justify-center rounded-xl ';
 
@@ -43,15 +45,17 @@ export const Button: React.FC<ButtonProps> = ({
         }
 
         // Variant
+        let dynamicStyle: ViewStyle = {};
         switch (variant) {
             case 'outline':
-                classes += 'bg-white border border-gray-200 ';
+                classes += 'border ';
+                dynamicStyle = { backgroundColor: theme.card, borderColor: theme.border };
                 break;
             case 'ghost':
                 classes += 'bg-transparent ';
                 break;
             default:
-                classes += 'bg-primary ';
+                dynamicStyle = { backgroundColor: theme.primary };
         }
 
         if (disabled || loading) {
@@ -75,31 +79,34 @@ export const Button: React.FC<ButtonProps> = ({
                 classes += 'text-base ';
         }
 
+        let textDynamicStyle: TextStyle = {};
         switch (variant) {
             case 'outline':
             case 'ghost':
-                classes += 'text-foreground ';
+                textDynamicStyle = { color: theme.text };
                 break;
             default:
-                classes += 'text-white ';
+                textDynamicStyle = { color: '#FFFFFF' };
         }
 
-        return classes;
+        return { classes, textClasses, dynamicStyle, textDynamicStyle };
     };
+
+    const { classes, textClasses, dynamicStyle, textDynamicStyle } = getBaseClasses();
 
     return (
         <TouchableOpacity
             onPress={onPress}
             disabled={disabled || loading}
-            className={getBaseClasses()}
-            style={style}
+            className={classes + className}
+            style={[dynamicStyle, style]}
             activeOpacity={0.7}
         >
             {loading ? (
-                <ActivityIndicator color={variant === 'default' ? '#FFFFFF' : '#22C55E'} />
+                <ActivityIndicator color={variant === 'default' ? '#FFFFFF' : theme.primary} />
             ) : (
                 typeof children === 'string' ? (
-                    <Text className={getTextClasses()} style={textStyle}>{children}</Text>
+                    <Text className={textClasses} style={[textDynamicStyle, textStyle]}>{children}</Text>
                 ) : (
                     children
                 )

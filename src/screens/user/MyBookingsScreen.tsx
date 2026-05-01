@@ -4,12 +4,14 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Calendar, Clock, CheckCircle, XCircle } from 'lucide-react-native';
 import { TopBar } from '../../components/shared/TopBar';
 import { Badge } from '../../components/ui/Badge';
+import { useApp } from '../../context/AppContext';
 import { Button } from '../../components/ui/Button';
 import { bookingsApi, Booking } from '../../services/api';
 import { useTranslation } from '../../translations';
 
 export const MyBookingsScreen: React.FC = () => {
     const { t } = useTranslation();
+    const { theme } = useApp();
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -95,24 +97,24 @@ export const MyBookingsScreen: React.FC = () => {
 
     if (isLoading) {
         return (
-            <View className="flex-1 bg-background">
+            <View style={{ flex: 1, backgroundColor: theme.background }}>
                 <TopBar title={t.booking.yourBookings} />
                 <View className="flex-1 items-center justify-center">
-                    <ActivityIndicator size="large" color="#22C55E" />
+                    <ActivityIndicator size="large" color={theme.primary} />
                 </View>
             </View>
         );
     }
 
     return (
-        <View className="flex-1 bg-background">
+        <View style={{ flex: 1, backgroundColor: theme.background }}>
             <TopBar title={t.booking.yourBookings} />
 
             {bookings.length === 0 ? (
                 <View className="flex-1 items-center justify-center p-12">
-                    <Calendar size={48} color="#D1D5DB" />
-                    <Text className="text-lg font-semibold text-foreground mt-3 mb-1">{t.booking.noBookings}</Text>
-                    <Text className="text-gray-500 text-center">{t.booking.yourBookings}</Text>
+                    <Calendar size={48} color={theme.border} />
+                    <Text style={{ fontSize: 18, fontWeight: '600', color: theme.text, marginTop: 12, marginBottom: 4 }}>{t.booking.noBookings}</Text>
+                    <Text style={{ color: theme.textMuted, textAlign: 'center' }}>{t.booking.yourBookings}</Text>
                 </View>
             ) : (
                 <FlatList
@@ -123,16 +125,16 @@ export const MyBookingsScreen: React.FC = () => {
                     onRefresh={fetchBookings}
                     refreshing={isLoading}
                     renderItem={({ item: booking }) => (
-                        <View className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                        <View style={{ backgroundColor: theme.card, borderRadius: 16, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}>
                             <View className="p-4 gap-3">
                                 <View className="flex-row items-start justify-between gap-3">
                                     <View className="flex-1">
-                                        <Text className="text-lg font-bold text-foreground mb-1">
+                                        <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text, marginBottom: 4 }}>
                                             {booking.stadiumName}
                                         </Text>
                                         <View className="flex-row items-center gap-1">
-                                            <Calendar size={16} color="#6B7280" />
-                                            <Text className="text-gray-600 text-sm">{formatDate(booking.startAt)}</Text>
+                                            <Calendar size={16} color={theme.textMuted} />
+                                            <Text style={{ color: theme.textSecondary, fontSize: 14 }}>{formatDate(booking.startAt)}</Text>
                                         </View>
                                     </View>
                                     <Badge variant={getStatusVariant(booking.status)}>
@@ -153,12 +155,12 @@ export const MyBookingsScreen: React.FC = () => {
 
                                 <View className="flex-row items-center gap-4">
                                     <View className="flex-row items-center gap-1">
-                                        <Clock size={16} color="#6B7280" />
-                                        <Text className="text-gray-600 text-sm">
+                                        <Clock size={16} color={theme.textMuted} />
+                                        <Text style={{ color: theme.textSecondary, fontSize: 14 }}>
                                             {formatTime(booking.startAt)} - {formatTime(booking.endAt)}
                                         </Text>
                                     </View>
-                                    <Text className="text-primary font-semibold">
+                                    <Text style={{ color: theme.primary, fontWeight: '600' }}>
                                         {booking.price.toLocaleString()} DZD
                                     </Text>
                                 </View>

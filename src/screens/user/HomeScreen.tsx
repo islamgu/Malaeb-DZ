@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, FlatList, ActivityIndicator }
 import { useNavigation } from '@react-navigation/native';
 import { Map, Settings, Filter, RefreshCw } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useApp } from '../../context/AppContext';
 import { SearchBar } from '../../components/shared/SearchBar';
 import { StadiumCard } from '../../components/shared/StadiumCard';
 import { Button } from '../../components/ui/Button';
@@ -13,6 +14,7 @@ export const HomeScreen: React.FC = () => {
     const navigation = useNavigation<any>();
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
+    const { theme } = useApp();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedType, setSelectedType] = useState<'all' | 'indoor' | 'outdoor'>('all');
     const [stadiums, setStadiums] = useState<Stadium[]>([]);
@@ -75,11 +77,15 @@ export const HomeScreen: React.FC = () => {
     });
 
     return (
-        <View className="flex-1 bg-background">
+        <View style={{ flex: 1, backgroundColor: theme.background }}>
             {/* Top Bar */}
             <View
-                className="bg-white border-b border-gray-100"
-                style={{ paddingTop: insets.top }}
+                style={{
+                    backgroundColor: theme.card,
+                    borderBottomWidth: 1,
+                    borderBottomColor: theme.borderLight,
+                    paddingTop: insets.top,
+                }}
             >
                 <View className="px-4 pt-4 pb-3 gap-3">
                     <View className="flex-row items-center gap-3">
@@ -95,14 +101,14 @@ export const HomeScreen: React.FC = () => {
                             size="icon"
                             onPress={() => navigation.navigate('MapView', { stadiums: filteredStadiums.map(toCardFormat) })}
                         >
-                            <Map size={20} color="#0F172A" />
+                            <Map size={20} color={theme.text} />
                         </Button>
                         <Button
                             variant="outline"
                             size="icon"
                             onPress={() => navigation.navigate('Profile')}
                         >
-                            <Settings size={20} color="#0F172A" />
+                            <Settings size={20} color={theme.text} />
                         </Button>
                     </View>
 
@@ -116,15 +122,18 @@ export const HomeScreen: React.FC = () => {
                             <TouchableOpacity
                                 key={option.value}
                                 onPress={() => setSelectedType(option.value)}
-                                className={`px-4 py-2 rounded-full ${selectedType === option.value
-                                    ? 'bg-primary'
-                                    : 'bg-gray-100'
-                                    }`}
+                                style={{
+                                    paddingHorizontal: 16,
+                                    paddingVertical: 8,
+                                    borderRadius: 9999,
+                                    backgroundColor: selectedType === option.value ? theme.primary : theme.inputBg,
+                                }}
                             >
-                                <Text className={`text-sm font-medium ${selectedType === option.value
-                                    ? 'text-white'
-                                    : 'text-foreground'
-                                    }`}>
+                                <Text style={{
+                                    fontSize: 14,
+                                    fontWeight: '500',
+                                    color: selectedType === option.value ? 'white' : theme.text,
+                                }}>
                                     {option.label}
                                 </Text>
                             </TouchableOpacity>
@@ -136,26 +145,26 @@ export const HomeScreen: React.FC = () => {
             {/* Loading State */}
             {isLoading ? (
                 <View className="flex-1 items-center justify-center">
-                    <ActivityIndicator size="large" color="#22C55E" />
-                    <Text className="text-gray-500 mt-3">{t.home.loadingStadiums}</Text>
+                    <ActivityIndicator size="large" color={theme.primary} />
+                    <Text style={{ color: theme.textMuted, marginTop: 12 }}>{t.home.loadingStadiums}</Text>
                 </View>
             ) : error ? (
                 <View className="flex-1 items-center justify-center p-12">
-                    <Text className="text-lg font-semibold text-foreground mb-2">{error}</Text>
+                    <Text style={{ fontSize: 18, fontWeight: '600', color: theme.text, mb: 8 }}>{error}</Text>
                     <Button onPress={fetchStadiums} variant="outline">
                         <View className="flex-row items-center gap-2">
-                            <RefreshCw size={16} color="#0F172A" />
-                            <Text>{t.common.retry}</Text>
+                            <RefreshCw size={16} color={theme.text} />
+                            <Text style={{ color: theme.text }}>{t.common.retry}</Text>
                         </View>
                     </Button>
                 </View>
             ) : filteredStadiums.length === 0 ? (
                 <View className="flex-1 items-center justify-center p-12">
-                    <Filter size={48} color="#D1D5DB" />
-                    <Text className="text-lg font-semibold text-foreground mt-3 mb-1">
+                    <Filter size={48} color={theme.border} />
+                    <Text style={{ fontSize: 18, fontWeight: '600', color: theme.text, marginTop: 12, marginBottom: 4 }}>
                         {t.home.noStadiumsFound}
                     </Text>
-                    <Text className="text-gray-500 text-center">
+                    <Text style={{ color: theme.textMuted, textAlign: 'center' }}>
                         {t.home.tryAdjusting}
                     </Text>
                 </View>

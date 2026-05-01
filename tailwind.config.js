@@ -5,6 +5,7 @@ module.exports = {
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
   presets: [require("nativewind/preset")],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -12,6 +13,11 @@ module.exports = {
         'primary-dark': '#16A34A',
         background: '#FAFAFA',
         foreground: '#0F172A',
+        'dark-bg': '#0F172A',
+        'dark-card': '#1E293B',
+        'dark-border': '#334155',
+        'dark-text': '#F1F5F9',
+        'dark-muted': '#94A3B8',
       },
     },
   },

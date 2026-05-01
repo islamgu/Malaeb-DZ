@@ -29,9 +29,12 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 const AdminStack = createNativeStackNavigator();
 
+import { useApp } from '../context/AppContext';
+
 // User Tab Navigator
 function UserTabs() {
     const insets = useSafeAreaInsets();
+    const { theme } = useApp();
 
     return (
         <Tab.Navigator
@@ -41,11 +44,11 @@ function UserTabs() {
                     height: 60 + insets.bottom,
                     paddingBottom: insets.bottom > 0 ? insets.bottom : 10,
                     paddingTop: 10,
-                    backgroundColor: '#FFFFFF',
-                    borderTopColor: '#E5E7EB',
+                    backgroundColor: theme.tabBar,
+                    borderTopColor: theme.tabBarBorder,
                 },
-                tabBarActiveTintColor: '#22C55E',
-                tabBarInactiveTintColor: '#9CA3AF',
+                tabBarActiveTintColor: theme.primary,
+                tabBarInactiveTintColor: theme.textMuted,
                 tabBarLabelStyle: {
                     fontSize: 12,
                     fontWeight: '500',

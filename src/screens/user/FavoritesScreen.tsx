@@ -6,10 +6,12 @@ import { TopBar } from '../../components/shared/TopBar';
 import { StadiumCard } from '../../components/shared/StadiumCard';
 import { favoritesApi, Favorite } from '../../services/api';
 import { useTranslation } from '../../translations';
+import { useApp } from '../../context/AppContext';
 
 export const FavoritesScreen: React.FC = () => {
     const navigation = useNavigation<any>();
     const { t } = useTranslation();
+    const { theme } = useApp();
     const [favorites, setFavorites] = useState<Favorite[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -54,24 +56,24 @@ export const FavoritesScreen: React.FC = () => {
 
     if (isLoading) {
         return (
-            <View className="flex-1 bg-background">
+            <View style={{ flex: 1, backgroundColor: theme.background }}>
                 <TopBar title={t.favorites.title} />
                 <View className="flex-1 items-center justify-center">
-                    <ActivityIndicator size="large" color="#22C55E" />
+                    <ActivityIndicator size="large" color={theme.primary} />
                 </View>
             </View>
         );
     }
 
     return (
-        <View className="flex-1 bg-background">
+        <View style={{ flex: 1, backgroundColor: theme.background }}>
             <TopBar title={t.favorites.title} />
 
             {favorites.length === 0 ? (
                 <View className="flex-1 items-center justify-center p-12">
-                    <Heart size={48} color="#D1D5DB" />
-                    <Text className="text-lg font-semibold text-foreground mt-3 mb-1">{t.favorites.noFavorites}</Text>
-                    <Text className="text-gray-500 text-center">{t.favorites.addFavorites}</Text>
+                    <Heart size={48} color={theme.border} />
+                    <Text style={{ fontSize: 18, fontWeight: '600', color: theme.text, marginTop: 12, marginBottom: 4 }}>{t.favorites.noFavorites}</Text>
+                    <Text style={{ color: theme.textMuted, textAlign: 'center' }}>{t.favorites.addFavorites}</Text>
                 </View>
             ) : (
                 <FlatList

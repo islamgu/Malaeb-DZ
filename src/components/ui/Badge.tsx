@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, ViewStyle, TextStyle } from 'react-native';
+import { useApp } from '../../context/AppContext';
 
 interface BadgeProps {
     children: React.ReactNode;
@@ -12,6 +13,8 @@ export const Badge: React.FC<BadgeProps> = ({
     variant = 'default',
     className = ''
 }) => {
+    const { theme } = useApp();
+
     const getVariantClasses = () => {
         switch (variant) {
             case 'secondary':
@@ -41,11 +44,22 @@ export const Badge: React.FC<BadgeProps> = ({
                 return 'text-white';
         }
     };
+    const getDynamicStyles = () => {
+        let viewStyle: ViewStyle = {};
+        let textStyle: TextStyle = {};
+        if (variant === 'secondary') {
+            viewStyle = { backgroundColor: theme.inputBg };
+            textStyle = { color: theme.text };
+        }
+        return { viewStyle, textStyle };
+    };
+
+    const { viewStyle, textStyle } = getDynamicStyles();
 
     return (
-        <View className={`px-2.5 py-1 rounded-full ${getVariantClasses()} ${className}`}>
+        <View className={`px-2.5 py-1 rounded-full ${getVariantClasses()} ${className}`} style={viewStyle}>
             {typeof children === 'string' ? (
-                <Text className={`text-xs font-medium ${getTextClasses()}`}>{children}</Text>
+                <Text className={`text-xs font-medium ${getTextClasses()}`} style={textStyle}>{children}</Text>
             ) : (
                 children
             )}

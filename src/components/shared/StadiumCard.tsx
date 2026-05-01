@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import { MapPin, Users, Star } from 'lucide-react-native';
 import { Badge } from '../ui/Badge';
+import { useApp } from '../../context/AppContext';
 
 // Default fallback image - a nice stadium photo
 const DEFAULT_STADIUM_IMAGE = 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800';
@@ -29,6 +30,7 @@ interface StadiumCardProps {
 }
 
 export const StadiumCard: React.FC<StadiumCardProps> = ({ stadium, onPress }) => {
+    const { theme } = useApp();
     const [imageLoading, setImageLoading] = useState(true);
     const [imageError, setImageError] = useState(false);
     const [imageUri, setImageUri] = useState<string>(DEFAULT_STADIUM_IMAGE);
@@ -68,20 +70,28 @@ export const StadiumCard: React.FC<StadiumCardProps> = ({ stadium, onPress }) =>
         <TouchableOpacity
             onPress={onPress}
             activeOpacity={0.9}
-            className="bg-white rounded-2xl overflow-hidden shadow-sm"
+            style={{
+                backgroundColor: theme.card,
+                borderRadius: 16,
+                overflow: 'hidden',
+                shadowColor: '#000',
+                shadowOpacity: 0.05,
+                shadowRadius: 8,
+                elevation: 2,
+            }}
         >
             <View className="relative h-48">
                 {imageLoading && (
-                    <View className="absolute inset-0 bg-gray-200 items-center justify-center z-10">
-                        <ActivityIndicator color="#22C55E" />
+                    <View className="absolute inset-0 bg-gray-200 items-center justify-center z-10" style={{ backgroundColor: theme.borderLight }}>
+                        <ActivityIndicator color={theme.primary} />
                     </View>
                 )}
                 {imageError ? (
-                    <View className="h-48 bg-gradient-to-br from-green-100 to-green-200 items-center justify-center">
-                        <View className="w-16 h-16 bg-green-300 rounded-full items-center justify-center mb-2">
+                    <View className="h-48 items-center justify-center" style={{ backgroundColor: theme.inputBg }}>
+                        <View className="w-16 h-16 rounded-full items-center justify-center mb-2" style={{ backgroundColor: theme.border }}>
                             <Text className="text-2xl">🏟️</Text>
                         </View>
-                        <Text className="text-green-700 font-medium">{stadium.name}</Text>
+                        <Text style={{ color: theme.textMuted, fontWeight: '500' }}>{stadium.name}</Text>
                     </View>
                 ) : (
                     <Image
@@ -102,32 +112,32 @@ export const StadiumCard: React.FC<StadiumCardProps> = ({ stadium, onPress }) =>
 
             <View className="p-4">
                 <View className="flex-row items-start justify-between mb-2">
-                    <Text className="flex-1 text-lg font-bold text-foreground">{stadium.name}</Text>
+                    <Text className="flex-1 text-lg font-bold" style={{ color: theme.text }}>{stadium.name}</Text>
                     <View className="flex-row items-center gap-1">
                         <Star size={16} fill="#FACC15" color="#FACC15" />
-                        <Text className="text-foreground font-medium">{displayRating}</Text>
+                        <Text style={{ color: theme.text, fontWeight: '500' }}>{displayRating}</Text>
                     </View>
                 </View>
 
                 <View className="flex-row items-center gap-1 mb-2">
-                    <MapPin size={16} color="#6B7280" />
-                    <Text className="text-gray-600">{displayLocation}</Text>
+                    <MapPin size={16} color={theme.textMuted} />
+                    <Text style={{ color: theme.textSecondary }}>{displayLocation}</Text>
                 </View>
 
                 <View className="flex-row items-center gap-4 mb-3">
                     <View className="flex-row items-center gap-1">
-                        <Users size={16} color="#6B7280" />
-                        <Text className="text-gray-600">{stadium.capacity || 'N/A'}</Text>
+                        <Users size={16} color={theme.textMuted} />
+                        <Text style={{ color: theme.textSecondary }}>{stadium.capacity || 'N/A'}</Text>
                     </View>
-                    <Text className="text-primary font-semibold">{stadium.pricePerHour.toLocaleString()} DZD/h</Text>
+                    <Text style={{ color: theme.primary, fontWeight: '600' }}>{stadium.pricePerHour.toLocaleString()} DZD/h</Text>
                 </View>
 
                 <View className="flex-row gap-2">
                     <Badge variant="secondary">
-                        <Text className="text-xs text-foreground capitalize">{displayType}</Text>
+                        <Text className="text-xs capitalize" style={{ color: theme.text }}>{displayType}</Text>
                     </Badge>
                     <Badge variant="secondary">
-                        <Text className="text-xs text-foreground">{displaySurface}</Text>
+                        <Text className="text-xs" style={{ color: theme.text }}>{displaySurface}</Text>
                     </Badge>
                 </View>
             </View>

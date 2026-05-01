@@ -56,9 +56,35 @@ export const BookingFlowScreen: React.FC = () => {
 
     const fetchBookedSlots = async () => {
         try {
-            const dateStr = selectedDate.toISOString().split('T')[0];
-            const slots = await bookingsApi.getBookedSlots(route.params?.id, dateStr);
-            setBookedHours(slots);
+            // Use existing endpoint - fetch user's bookings and filter client-side
+            const myBookings = await bookingsApi.getMyBookings();
+
+            // Filter bookings for this stadium that are active (PENDING or ACCEPTED)
+            const stadiumId = route.params?.id;
+            const selectedDateStr = selectedDate.toDateString();
+
+            const activeBookings = myBookings.filter((b) => {
+                if (b.stadiumId !== stadiumId) return false;
+                if (b.status !== 'PENDING' && b.status !== 'ACCEPTED') return false;
+                // Check if booking is on the selected date
+                const bookingDate = new Date(b.startAt).toDateString();
+                return bookingDate === selectedDateStr;
+            });
+
+            // Extract booked hours from active bookings
+            const hours: string[] = [];
+            for (const booking of activeBookings) {
+                const start = new Date(booking.startAt);
+                const end = new Date(booking.endAt);
+                let hour = start.getHours();
+                const endHour = end.getHours();
+                while (hour < endHour) {
+                    hours.push(`${hour.toString().padStart(2, '0')}:00`);
+                    hour++;
+                }
+            }
+
+            setBookedHours([...new Set(hours)]);
         } catch (error) {
             console.error('Failed to fetch booked slots:', error);
             setBookedHours([]);
