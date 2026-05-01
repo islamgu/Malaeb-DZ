@@ -160,6 +160,11 @@ export const bookingsApi = {
         return data;
     },
 
+    getBookedSlots: async (stadiumId: string, date: string): Promise<string[]> => {
+        const { data } = await api.get(`/bookings/slots/${stadiumId}`, { params: { date } });
+        return data.bookedHours;
+    },
+
     create: async (booking: {
         stadiumId: string;
         startAt: string;

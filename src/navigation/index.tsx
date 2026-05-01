@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, Calendar, Heart, User } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // User Screens
 import { SplashScreen } from '../screens/user/SplashScreen';
@@ -30,13 +31,15 @@ const AdminStack = createNativeStackNavigator();
 
 // User Tab Navigator
 function UserTabs() {
+    const insets = useSafeAreaInsets();
+
     return (
         <Tab.Navigator
             screenOptions={{
                 headerShown: false,
                 tabBarStyle: {
-                    height: 80,
-                    paddingBottom: 20,
+                    height: 60 + insets.bottom,
+                    paddingBottom: insets.bottom > 0 ? insets.bottom : 10,
                     paddingTop: 10,
                     backgroundColor: '#FFFFFF',
                     borderTopColor: '#E5E7EB',

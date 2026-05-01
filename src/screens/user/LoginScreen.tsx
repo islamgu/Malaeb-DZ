@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, Image, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
@@ -10,12 +10,13 @@ import { useTranslation } from '../../translations';
 
 export const LoginScreen: React.FC = () => {
     const navigation = useNavigation<any>();
+    const route = useRoute<any>();
     const insets = useSafeAreaInsets();
     const { signIn } = useAuth();
     const { t, isRTL } = useTranslation();
 
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState(route.params?.email || '');
+    const [password, setPassword] = useState(route.params?.password || '');
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -69,20 +70,22 @@ export const LoginScreen: React.FC = () => {
 
     return (
         <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
             className="flex-1"
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
             <ScrollView
                 className="flex-1 bg-white"
                 contentContainerStyle={{
                     flexGrow: 1,
                     paddingTop: insets.top + 32,
-                    paddingBottom: insets.bottom + 24,
+                    paddingBottom: insets.bottom + 120,
                     paddingHorizontal: 24,
                     justifyContent: 'center',
                     alignItems: 'center',
                 }}
                 keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="interactive"
             >
                 <View style={{ width: '100%', maxWidth: 400 }}>
                     {/* Logo */}
@@ -172,7 +175,7 @@ export const LoginScreen: React.FC = () => {
 
                         {/* SignUp Link */}
                         <TouchableOpacity
-                            onPress={() => navigation.navigate('SignUp')}
+                            onPress={() => navigation.navigate('SignUp', { email, password })}
                             className="mt-4"
                         >
                             <Text className="text-center text-gray-600">

@@ -1,10 +1,58 @@
 import { Router, Response } from 'express';
 import { db } from '../db';
 import { bookings, stadiums, users } from '../db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and, inArray, lt, gt } from 'drizzle-orm';
 import { AuthRequest, authenticate, adminOnly } from '../middleware/auth';
 
 const router = Router();
+
+// GET /api/bookings/slots/:stadiumId?date=YYYY-MM-DD - Get booked slots for a stadium on a date
+router.get('/slots/:stadiumId', async (req, res: Response) => {
+    try {
+        const { stadiumId } = req.params;
+        const { date } = req.query;
+
+        if (!date) {
+            return res.status(400).json({ error: 'Date query parameter is required (YYYY-MM-DD)' });
+        }
+
+        const dayStart = new Date(`${date}T00:00:00`);
+        const dayEnd = new Date(`${date}T23:59:59`);
+
+        const dayBookings = await db.select({
+            startAt: bookings.startAt,
+            endAt: bookings.endAt,
+        })
+            .from(bookings)
+            .where(
+                and(
+                    eq(bookings.stadiumId, stadiumId),
+                    inArray(bookings.status, ['PENDING', 'ACCEPTED']),
+                    lt(bookings.startAt, dayEnd),
+                    gt(bookings.endAt, dayStart),
+                )
+            );
+
+        // Extract booked hours (e.g., ["08:00", "09:00", "10:00"])
+        const bookedHours: string[] = [];
+        for (const booking of dayBookings) {
+            const start = new Date(booking.startAt);
+            const end = new Date(booking.endAt);
+            let hour = start.getHours();
+            const endHour = end.getHours();
+            while (hour < endHour) {
+                bookedHours.push(`${hour.toString().padStart(2, '0')}:00`);
+                hour++;
+            }
+        }
+
+        // Return unique booked hours
+        res.json({ bookedHours: [...new Set(bookedHours)] });
+    } catch (error) {
+        console.error('Get booked slots error:', error);
+        res.status(500).json({ error: 'Failed to get booked slots' });
+    }
+});
 
 // GET /api/bookings - Get user's bookings
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
@@ -71,11 +119,30 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
+        const requestedStart = new Date(startAt);
+        const requestedEnd = new Date(endAt);
+
+        // Check for overlapping bookings (PENDING or ACCEPTED) on the same stadium
+        const overlapping = await db.select({ id: bookings.id })
+            .from(bookings)
+            .where(
+                and(
+                    eq(bookings.stadiumId, stadiumId),
+                    inArray(bookings.status, ['PENDING', 'ACCEPTED']),
+                    lt(bookings.startAt, requestedEnd),
+                    gt(bookings.endAt, requestedStart),
+                )
+            );
+
+        if (overlapping.length > 0) {
+            return res.status(409).json({ error: 'This time slot is already booked' });
+        }
+
         const [newBooking] = await db.insert(bookings).values({
             stadiumId,
             userId: req.user!.id,
-            startAt: new Date(startAt),
-            endAt: new Date(endAt),
+            startAt: requestedStart,
+            endAt: requestedEnd,
             price,
             isPremium: isPremium || false,
             status: 'PENDING',

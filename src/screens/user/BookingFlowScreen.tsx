@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Modal } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { Calendar as CalendarIcon, Clock, AlertCircle, CheckCircle } from 'lucide-react-native';
+import { Calendar as CalendarIcon, Clock, AlertCircle, CheckCircle, MapPin, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TopBar } from '../../components/shared/TopBar';
 import { Button } from '../../components/ui/Button';
@@ -23,14 +23,23 @@ export const BookingFlowScreen: React.FC = () => {
 
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [selectedHours, setSelectedHours] = useState<string[]>([]);
+    const [bookedHours, setBookedHours] = useState<string[]>([]);
     const [stadium, setStadium] = useState<Stadium | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isBooking, setIsBooking] = useState(false);
     const [bookingSuccess, setBookingSuccess] = useState(false);
+    const [showConfirmation, setShowConfirmation] = useState(false);
 
     useEffect(() => {
         fetchStadium();
     }, [route.params?.id]);
+
+    // Fetch booked slots whenever the date or stadium changes
+    useEffect(() => {
+        if (stadium?.id) {
+            fetchBookedSlots();
+        }
+    }, [selectedDate, stadium?.id]);
 
     const fetchStadium = async () => {
         try {
@@ -42,6 +51,17 @@ export const BookingFlowScreen: React.FC = () => {
             navigation.goBack();
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const fetchBookedSlots = async () => {
+        try {
+            const dateStr = selectedDate.toISOString().split('T')[0];
+            const slots = await bookingsApi.getBookedSlots(route.params?.id, dateStr);
+            setBookedHours(slots);
+        } catch (error) {
+            console.error('Failed to fetch booked slots:', error);
+            setBookedHours([]);
         }
     };
 
@@ -74,6 +94,7 @@ export const BookingFlowScreen: React.FC = () => {
     }
 
     const toggleHour = (hour: string) => {
+        if (bookedHours.includes(hour)) return; // Can't select booked hours
         if (selectedHours.includes(hour)) {
             setSelectedHours(selectedHours.filter((h) => h !== hour));
         } else {
@@ -98,16 +119,23 @@ export const BookingFlowScreen: React.FC = () => {
         }, 0);
     };
 
-    const handleBook = async () => {
+    const handleBook = () => {
         if (selectedHours.length === 0) {
             Alert.alert(t.common.error, t.booking.selectAtLeastOneHour);
             return;
         }
+        setShowConfirmation(true);
+    };
 
+    const handleConfirm = () => {
+        setShowConfirmation(false);
+        const sortedHours = [...selectedHours].sort();
+        submitBooking(sortedHours);
+    };
+
+    const submitBooking = async (sortedHours: string[]) => {
         setIsBooking(true);
         try {
-            // Create start and end times
-            const sortedHours = [...selectedHours].sort();
             const startHour = sortedHours[0];
             const endHour = sortedHours[sortedHours.length - 1];
 
@@ -125,9 +153,15 @@ export const BookingFlowScreen: React.FC = () => {
                 isPremium: selectedHours.some(isPremiumHour),
             });
 
+            // Refresh booked slots and clear selection
+            setSelectedHours([]);
+            fetchBookedSlots();
             setBookingSuccess(true);
         } catch (error: any) {
-            Alert.alert(t.common.error, error.response?.data?.error || t.errors.failedToCreateBooking);
+            const errorMsg = error.response?.data?.error || t.errors.failedToCreateBooking;
+            Alert.alert(t.common.error, errorMsg);
+            // Refresh slots in case they changed
+            fetchBookedSlots();
         } finally {
             setIsBooking(false);
         }
@@ -198,6 +232,7 @@ export const BookingFlowScreen: React.FC = () => {
                     <View className="flex-row flex-wrap gap-2">
                         {timeSlots.map((hour) => {
                             const isSelected = selectedHours.includes(hour);
+                            const isBooked = bookedHours.includes(hour);
                             const premium = isPremiumHour(hour);
                             const price = premium
                                 ? stadium.pricePerHour * (stadium.premiumMultiplier || 1.5)
@@ -207,19 +242,32 @@ export const BookingFlowScreen: React.FC = () => {
                                 <TouchableOpacity
                                     key={hour}
                                     onPress={() => toggleHour(hour)}
-                                    className={`relative w-[31%] p-3 rounded-xl border-2 ${isSelected ? 'border-primary bg-primary/5' : 'border-gray-200'
+                                    disabled={isBooked}
+                                    className={`relative w-[31%] p-3 rounded-xl border-2 ${isBooked
+                                        ? 'border-red-200 bg-red-50'
+                                        : isSelected
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-gray-200'
                                         }`}
+                                    style={isBooked ? { opacity: 0.6 } : undefined}
                                 >
                                     <Text
-                                        className={`text-center font-semibold ${isSelected ? 'text-primary' : 'text-foreground'
+                                        className={`text-center font-semibold ${isBooked
+                                            ? 'text-red-400 line-through'
+                                            : isSelected
+                                                ? 'text-primary'
+                                                : 'text-foreground'
                                             }`}
                                     >
                                         {hour}
                                     </Text>
-                                    <Text className="text-center text-xs text-gray-500 mt-1">
-                                        {Math.round(price).toLocaleString()} DZD
+                                    <Text className={`text-center text-xs mt-1 ${isBooked ? 'text-red-400' : 'text-gray-500'}`}>
+                                        {isBooked
+                                            ? (t.booking.booked || 'Booked')
+                                            : `${Math.round(price).toLocaleString()} DZD`
+                                        }
                                     </Text>
-                                    {premium && (
+                                    {premium && !isBooked && (
                                         <View className="absolute -top-2 -right-2 bg-primary px-1.5 py-0.5 rounded-full">
                                             <Text className="text-white text-xs font-bold">P</Text>
                                         </View>
@@ -273,6 +321,157 @@ export const BookingFlowScreen: React.FC = () => {
                     {isBooking ? t.booking.booking : t.booking.confirmBooking}
                 </Button>
             </View>
+
+            {/* Confirmation Modal */}
+            <Modal
+                visible={showConfirmation}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowConfirmation(false)}
+            >
+                <View
+                    style={{
+                        flex: 1,
+                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        padding: 24,
+                    }}
+                >
+                    <TouchableOpacity
+                        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                        activeOpacity={1}
+                        onPress={() => setShowConfirmation(false)}
+                    />
+
+                    <View
+                        style={{
+                            backgroundColor: 'white',
+                            borderRadius: 24,
+                            width: '100%',
+                            maxWidth: 380,
+                            overflow: 'hidden',
+                        }}
+                    >
+                        {/* Header */}
+                        <View style={{
+                            backgroundColor: '#22C55E',
+                            paddingVertical: 20,
+                            paddingHorizontal: 24,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                        }}>
+                            <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold' }}>
+                                {t.booking.confirmBooking || 'Confirm Booking'}
+                            </Text>
+                            <TouchableOpacity onPress={() => setShowConfirmation(false)}>
+                                <X size={24} color="white" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Content */}
+                        <View style={{ padding: 24, gap: 16 }}>
+                            {/* Stadium */}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                                <View style={{
+                                    width: 44, height: 44, borderRadius: 12,
+                                    backgroundColor: '#F0FDF4', alignItems: 'center', justifyContent: 'center',
+                                }}>
+                                    <MapPin size={22} color="#22C55E" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '500' }}>
+                                        {t.stadium.stadium || 'Stadium'}
+                                    </Text>
+                                    <Text style={{ fontSize: 16, fontWeight: '700', color: '#0F172A' }}>
+                                        {stadium.name}
+                                    </Text>
+                                </View>
+                            </View>
+
+                            {/* Date */}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                                <View style={{
+                                    width: 44, height: 44, borderRadius: 12,
+                                    backgroundColor: '#F0FDF4', alignItems: 'center', justifyContent: 'center',
+                                }}>
+                                    <CalendarIcon size={22} color="#22C55E" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '500' }}>
+                                        {t.booking.selectDate || 'Date'}
+                                    </Text>
+                                    <Text style={{ fontSize: 16, fontWeight: '700', color: '#0F172A' }}>
+                                        {selectedDate.toLocaleDateString('en-GB', {
+                                            weekday: 'long', day: 'numeric', month: 'long',
+                                        })}
+                                    </Text>
+                                </View>
+                            </View>
+
+                            {/* Time */}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                                <View style={{
+                                    width: 44, height: 44, borderRadius: 12,
+                                    backgroundColor: '#F0FDF4', alignItems: 'center', justifyContent: 'center',
+                                }}>
+                                    <Clock size={22} color="#22C55E" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '500' }}>
+                                        {t.booking.time || 'Time'}
+                                    </Text>
+                                    <Text style={{ fontSize: 16, fontWeight: '700', color: '#0F172A' }}>
+                                        {[...selectedHours].sort()[0]} - {[...selectedHours].sort().slice(-1)[0]}
+                                        {'  '}
+                                        <Text style={{ fontSize: 13, fontWeight: '500', color: '#6B7280' }}>
+                                            ({selectedHours.length} {selectedHours.length === 1 ? 'hour' : 'hours'})
+                                        </Text>
+                                    </Text>
+                                </View>
+                            </View>
+
+                            {/* Divider + Total */}
+                            <View style={{
+                                borderTopWidth: 1, borderTopColor: '#E5E7EB',
+                                paddingTop: 16, marginTop: 4,
+                                flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+                            }}>
+                                <Text style={{ fontSize: 16, fontWeight: '600', color: '#374151' }}>
+                                    {t.booking.total || 'Total'}
+                                </Text>
+                                <Text style={{ fontSize: 24, fontWeight: '800', color: '#22C55E' }}>
+                                    {Math.round(calculateTotal()).toLocaleString()} DZD
+                                </Text>
+                            </View>
+                        </View>
+
+                        {/* Buttons */}
+                        <View style={{ paddingHorizontal: 24, paddingBottom: 24, gap: 10 }}>
+                            <Button onPress={handleConfirm}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                    <CheckCircle size={20} color="white" />
+                                    <Text style={{ color: 'white', fontWeight: '700', fontSize: 16 }}>
+                                        {t.common.confirm || 'Confirm'}
+                                    </Text>
+                                </View>
+                            </Button>
+                            <TouchableOpacity
+                                onPress={() => setShowConfirmation(false)}
+                                style={{
+                                    paddingVertical: 14, borderRadius: 12,
+                                    alignItems: 'center', backgroundColor: '#F3F4F6',
+                                }}
+                            >
+                                <Text style={{ color: '#6B7280', fontWeight: '600', fontSize: 15 }}>
+                                    {t.common.cancel || 'Cancel'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };

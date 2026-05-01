@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, ActivityIndicator, Linking, Image } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator, Linking, Image, AppState } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Mail, RefreshCw, ArrowLeft, CheckCircle } from 'lucide-react-native';
@@ -21,15 +21,34 @@ export const EmailVerificationScreen: React.FC = () => {
     const [resendTimer, setResendTimer] = useState(60);
     const [canResend, setCanResend] = useState(false);
 
-    // Countdown timer for resend
-    useEffect(() => {
-        if (resendTimer > 0) {
-            const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-            return () => clearTimeout(timer);
-        } else {
+    // Store the target end time so the timer works even in background
+    const endTimeRef = useRef<number>(Date.now() + 60 * 1000);
+
+    const updateTimer = useCallback(() => {
+        const remaining = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
+        setResendTimer(remaining);
+        if (remaining <= 0) {
             setCanResend(true);
         }
-    }, [resendTimer]);
+    }, []);
+
+    // Countdown timer using timestamps (works across background)
+    useEffect(() => {
+        if (canResend) return;
+
+        const interval = setInterval(updateTimer, 1000);
+        return () => clearInterval(interval);
+    }, [canResend, updateTimer]);
+
+    // Recalculate timer when app comes back from background
+    useEffect(() => {
+        const subscription = AppState.addEventListener('change', (nextState) => {
+            if (nextState === 'active') {
+                updateTimer();
+            }
+        });
+        return () => subscription.remove();
+    }, [updateTimer]);
 
     const handleCheckVerified = async () => {
         setIsChecking(true);
@@ -61,6 +80,7 @@ export const EmailVerificationScreen: React.FC = () => {
             const result = await sendVerificationEmail();
             if (result.success) {
                 setResendTimer(60);
+                endTimeRef.current = Date.now() + 60 * 1000;
                 setCanResend(false);
                 Alert.alert(
                     t.common.success || 'Success',

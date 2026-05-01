@@ -5,7 +5,7 @@ import { Upload, Plus, X, CheckCircle, Camera, Image as ImageIcon, MapPin, Cross
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapView, { PROVIDER_GOOGLE, Region } from 'react-native-maps';
-import * as Location from 'expo-location';
+import * as Location from "expo-location";
 import { TopBar } from '../../components/shared/TopBar';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
