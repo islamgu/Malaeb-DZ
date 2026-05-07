@@ -112,31 +112,20 @@ async function seed() {
     console.log('🌱 Seeding database...\n');
 
     try {
-        // Create admin user
+        // Create admin user (password is managed by Firebase)
         console.log('👤 Creating admin user...');
         const [admin] = await db.insert(users).values({
             email: 'admin@gmail.com',
             name: 'Admin',
-            phone: '+213558099019', // Real admin phone number
+            phone: '+213558099019',
             role: 'ADMIN',
+            emailVerified: true,
         }).onConflictDoNothing().returning();
 
         if (admin) {
             console.log(`   ✅ Admin created: ${admin.email}`);
         } else {
             console.log('   ⚠️  Admin already exists');
-        }
-
-        // Create test user
-        const [testUser] = await db.insert(users).values({
-            email: 'user@example.com',
-            name: 'Test User',
-            phone: '$2a$10$abcdefghijklmnopqrstuvwxyz123456', // Hashed 'password'
-            role: 'USER',
-        }).onConflictDoNothing().returning();
-
-        if (testUser) {
-            console.log(`   ✅ Test user created: ${testUser.email}`);
         }
 
         // Create stadiums
@@ -168,9 +157,8 @@ async function seed() {
         }
 
         console.log('\n✨ Seed completed successfully!');
-        console.log('\n📋 Login credentials:');
-        console.log('   Admin: admin@gmail.com / 1234');
-        console.log('   User:  user@example.com / password');
+        console.log('\n📋 Admin user created in local DB.');
+        console.log('   Note: Passwords are managed by Firebase Auth.');
 
     } catch (error) {
         console.error('❌ Seed failed:', error);

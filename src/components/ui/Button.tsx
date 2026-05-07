@@ -28,65 +28,47 @@ export const Button: React.FC<ButtonProps> = ({
     const { theme } = useApp();
     const getBaseClasses = () => {
         let classes = 'flex-row items-center justify-center rounded-xl ';
+        let textClasses = 'font-semibold ';
 
         // Size
         switch (size) {
             case 'sm':
                 classes += 'h-9 px-3 ';
+                textClasses += 'text-sm ';
                 break;
             case 'lg':
                 classes += 'h-14 px-8 ';
+                textClasses += 'text-lg ';
                 break;
             case 'icon':
                 classes += 'h-12 w-12 ';
                 break;
             default:
                 classes += 'h-12 px-6 ';
+                textClasses += 'text-base ';
         }
 
         // Variant
         let dynamicStyle: ViewStyle = {};
+        let textDynamicStyle: TextStyle = {};
+        
         switch (variant) {
             case 'outline':
                 classes += 'border ';
                 dynamicStyle = { backgroundColor: theme.card, borderColor: theme.border };
+                textDynamicStyle = { color: theme.text };
                 break;
             case 'ghost':
                 classes += 'bg-transparent ';
+                textDynamicStyle = { color: theme.text };
                 break;
             default:
                 dynamicStyle = { backgroundColor: theme.primary };
+                textDynamicStyle = { color: '#FFFFFF' };
         }
 
         if (disabled || loading) {
             classes += 'opacity-50 ';
-        }
-
-        return classes + className;
-    };
-
-    const getTextClasses = () => {
-        let classes = 'font-semibold ';
-
-        switch (size) {
-            case 'sm':
-                classes += 'text-sm ';
-                break;
-            case 'lg':
-                classes += 'text-lg ';
-                break;
-            default:
-                classes += 'text-base ';
-        }
-
-        let textDynamicStyle: TextStyle = {};
-        switch (variant) {
-            case 'outline':
-            case 'ghost':
-                textDynamicStyle = { color: theme.text };
-                break;
-            default:
-                textDynamicStyle = { color: '#FFFFFF' };
         }
 
         return { classes, textClasses, dynamicStyle, textDynamicStyle };

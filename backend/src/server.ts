@@ -37,8 +37,8 @@ app.get('/api/health', (req, res) => {
 app.listen(PORT, () => {
     console.log(`🏟️  Stadium Manager API running on http://localhost:${PORT}`);
     console.log(`📚 Endpoints:`);
-    console.log(`   POST   /api/auth/login`);
-    console.log(`   POST   /api/auth/register`);
+    console.log(`   POST   /api/auth/sync (Firebase token)`);
+    console.log(`   PATCH  /api/auth/verify-email`);
     console.log(`   GET    /api/auth/me`);
     console.log(`   GET    /api/stadiums`);
     console.log(`   GET    /api/stadiums/:id`);

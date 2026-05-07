@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authApi } from '../services/api';
 
 export interface User {
@@ -38,19 +37,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setFirebaseUser(fbUser);
 
             if (fbUser) {
-                // Try to get stored user data
-                const storedUser = await authApi.getStoredUser();
-                if (storedUser) {
-                    setUser(storedUser);
+                // User is signed in — sync with backend
+                try {
+                    const backendUser = await authApi.syncUser();
+                    setUser(backendUser);
+                } catch (error) {
+                    console.error('Failed to sync user with backend:', error);
+                    // Fall back to stored user
+                    const storedUser = await authApi.getStoredUser();
+                    if (storedUser) {
+                        setUser(storedUser);
+                    }
                 }
             } else {
-                // Check for stored user even without Firebase user (for test mode)
-                const storedUser = await authApi.getStoredUser();
-                if (storedUser) {
-                    setUser(storedUser);
-                } else {
-                    setUser(null);
-                }
+                setUser(null);
             }
 
             setIsLoading(false);
@@ -59,25 +59,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return unsubscribe;
     }, []);
 
-    // Check for stored user on mount
-    useEffect(() => {
-        checkStoredUser();
-    }, []);
-
-    const checkStoredUser = async () => {
-        try {
-            const storedUser = await authApi.getStoredUser();
-            if (storedUser) {
-                setUser(storedUser);
-            }
-        } catch (error) {
-            console.error('Error checking stored user:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Sign up with email and password, then send verification email
+    // Sign up with email and password via Firebase
     const signUp = async (email: string, password: string, name?: string) => {
         try {
             // Create Firebase account
@@ -86,13 +68,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             // Send verification email
             await userCredential.user.sendEmailVerification();
 
-            // Register with backend
+            // Sync user data with backend
             try {
-                const result = await authApi.register(email, password, undefined, name);
-                setUser(result.user);
+                const backendUser = await authApi.syncUser(name);
+                setUser(backendUser);
             } catch (backendError: any) {
-                console.error('Backend register error:', backendError);
-                // Still return success since Firebase account was created
+                console.error('Backend sync error:', backendError);
+                // Firebase account was still created successfully
             }
 
             return { success: true };
@@ -110,60 +92,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    // Sign in with email and password
+    // Sign in with email and password via Firebase
     const signIn = async (email: string, password: string) => {
         try {
-            // Admin Bypass: skip Firebase completely
-            if (email === 'admin@gmail.com' && password === '1234') {
-                try {
-                    const result = await authApi.login(email, password);
-                    setUser({ ...result.user, emailVerified: true });
-                    return {
-                        success: true,
-                        isAdmin: true,
-                        emailVerified: true,
-                    };
-                } catch (backendError: any) {
-                    return {
-                        success: false,
-                        error: backendError.response?.data?.error || 'Invalid admin credentials',
-                    };
-                }
-            }
-
-            // Sign in with Firebase
+            // Authenticate with Firebase
             const userCredential = await auth().signInWithEmailAndPassword(email, password);
             const isEmailVerified = userCredential.user.emailVerified;
 
-            // Login with backend
+            // Sync with backend
             try {
-                const result = await authApi.login(email, password);
+                const backendUser = await authApi.syncUser();
 
-                // If Firebase says verified, update backend too
-                if (isEmailVerified && !result.user.emailVerified) {
+                // If Firebase says verified but backend doesn't know, sync it
+                if (isEmailVerified && !backendUser.emailVerified) {
                     try {
-                        const updatedUser = await authApi.verifyEmail();
-                        setUser({ ...result.user, emailVerified: true });
+                        await authApi.verifyEmail();
+                        backendUser.emailVerified = true;
                     } catch (e) {
                         console.error('Failed to sync email verification:', e);
                     }
-                } else {
-                    setUser(result.user);
                 }
+
+                setUser(backendUser);
 
                 return {
                     success: true,
-                    isAdmin: result.user.role === 'ADMIN',
+                    isAdmin: backendUser.role === 'ADMIN',
                     emailVerified: isEmailVerified,
                 };
             } catch (backendError: any) {
-                console.error('Backend login error:', backendError);
+                console.error('Backend sync error:', backendError);
                 return {
                     success: false,
-                    error: backendError.response?.data?.error || 'Invalid credentials',
+                    error: backendError.response?.data?.error || 'Failed to sync with server',
                 };
             }
-
         } catch (error: any) {
             console.error('Sign in error:', error.code, error.message);
             let errorMessage = 'Invalid credentials';
@@ -175,6 +138,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 errorMessage = 'Invalid email address';
             } else if (error.code === 'auth/too-many-requests') {
                 errorMessage = 'Too many attempts. Please try again later';
+            } else if (error.code === 'auth/invalid-credential') {
+                errorMessage = 'Invalid email or password';
             }
             return { success: false, error: errorMessage };
         }
@@ -211,7 +176,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (verified) {
                 // Sync with backend
                 try {
-                    const updatedBackendUser = await authApi.verifyEmail();
+                    await authApi.verifyEmail();
                     setUser(prev => prev ? { ...prev, emailVerified: true } : prev);
                 } catch (e) {
                     console.error('Failed to sync email verification with backend:', e);

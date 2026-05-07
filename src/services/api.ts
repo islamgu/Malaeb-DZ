@@ -1,5 +1,6 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import auth from '@react-native-firebase/auth';
 
 // Use your computer's local IP for device testing
 // Android emulator: use 10.0.2.2, Android physical device: use your computer's IP
@@ -15,11 +16,16 @@ const api = axios.create({
     },
 });
 
-// Add auth token to requests
+// Add Firebase ID token to requests
 api.interceptors.request.use(async (config) => {
-    const token = await AsyncStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+    try {
+        const currentUser = auth().currentUser;
+        if (currentUser) {
+            const idToken = await currentUser.getIdToken();
+            config.headers.Authorization = `Bearer ${idToken}`;
+        }
+    } catch (error) {
+        console.error('Failed to get Firebase ID token:', error);
     }
     return config;
 });
@@ -27,17 +33,10 @@ api.interceptors.request.use(async (config) => {
 // ============ Auth ============
 
 export const authApi = {
-    login: async (email: string, password: string) => {
-        const { data } = await api.post('/auth/login', { email, password });
-        await AsyncStorage.setItem('token', data.token);
-        await AsyncStorage.setItem('user', JSON.stringify(data.user));
-        return data;
-    },
-
-    register: async (email: string, password: string, phone?: string, name?: string) => {
-        const { data } = await api.post('/auth/register', { email, password, phone, name });
-        await AsyncStorage.setItem('token', data.token);
-        await AsyncStorage.setItem('user', JSON.stringify(data.user));
+    // Sync Firebase user with the backend database
+    syncUser: async (name?: string, phone?: string) => {
+        const { data } = await api.post('/auth/sync', { name, phone });
+        await AsyncStorage.setItem('user', JSON.stringify(data));
         return data;
     },
 
@@ -54,7 +53,6 @@ export const authApi = {
     },
 
     logout: async () => {
-        await AsyncStorage.removeItem('token');
         await AsyncStorage.removeItem('user');
     },
 
@@ -66,10 +64,6 @@ export const authApi = {
     getStoredUser: async () => {
         const user = await AsyncStorage.getItem('user');
         return user ? JSON.parse(user) : null;
-    },
-
-    getToken: async () => {
-        return AsyncStorage.getItem('token');
     },
 };
 

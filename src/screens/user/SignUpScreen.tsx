@@ -1,12 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, Image, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { Mail, Lock, Eye, EyeOff, UserPlus } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, UserPlus, Check, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '../../translations';
+
+// Password policy rules
+const PASSWORD_RULES = [
+    { key: 'length', label: 'At least 8 characters', test: (p: string) => p.length >= 8 },
+    { key: 'upper', label: 'One uppercase letter (A-Z)', test: (p: string) => /[A-Z]/.test(p) },
+    { key: 'lower', label: 'One lowercase letter (a-z)', test: (p: string) => /[a-z]/.test(p) },
+    { key: 'number', label: 'One number (0-9)', test: (p: string) => /\d/.test(p) },
+    { key: 'symbol', label: 'One special character (!@#$...)', test: (p: string) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p) },
+];
 
 export const SignUpScreen: React.FC = () => {
     const navigation = useNavigation<any>();
@@ -25,6 +34,16 @@ export const SignUpScreen: React.FC = () => {
         return emailRegex.test(email);
     };
 
+    // Compute which password rules pass
+    const passwordChecks = useMemo(() => {
+        return PASSWORD_RULES.map(rule => ({
+            ...rule,
+            passed: rule.test(password),
+        }));
+    }, [password]);
+
+    const allRulesPassed = passwordChecks.every(r => r.passed);
+
     const handleSubmit = async () => {
         // Validate email
         if (!email.trim()) {
@@ -37,8 +56,8 @@ export const SignUpScreen: React.FC = () => {
         }
 
         // Validate password
-        if (!password || password.length < 4) {
-            Alert.alert(t.common.error, t.auth.passwordMinLength || 'Password must be at least 4 characters');
+        if (!allRulesPassed) {
+            Alert.alert(t.common.error, 'Password does not meet all requirements.');
             return;
         }
 
@@ -144,9 +163,38 @@ export const SignUpScreen: React.FC = () => {
                             </View>
                         </View>
 
+                        {/* Password Strength Checklist */}
+                        {password.length > 0 && (
+                            <View style={{
+                                backgroundColor: '#F9FAFB',
+                                borderRadius: 12,
+                                padding: 12,
+                                gap: 6,
+                            }}>
+                                <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 2 }}>
+                                    Password Requirements
+                                </Text>
+                                {passwordChecks.map((rule) => (
+                                    <View key={rule.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                        {rule.passed ? (
+                                            <Check size={16} color="#10B981" />
+                                        ) : (
+                                            <X size={16} color="#EF4444" />
+                                        )}
+                                        <Text style={{
+                                            fontSize: 13,
+                                            color: rule.passed ? '#10B981' : '#6B7280',
+                                        }}>
+                                            {rule.label}
+                                        </Text>
+                                    </View>
+                                ))}
+                            </View>
+                        )}
+
                         <Button
                             onPress={handleSubmit}
-                            disabled={isLoading || !email.trim() || password.length < 4}
+                            disabled={isLoading || !email.trim() || !allRulesPassed}
                         >
                             {isLoading ? (
                                 <ActivityIndicator color="white" />
