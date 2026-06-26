@@ -56,6 +56,13 @@ export const authApi = {
         await AsyncStorage.removeItem('user');
     },
 
+    // Permanently delete the current user's account (Firebase + backend data)
+    deleteAccount: async () => {
+        const { data } = await api.delete('/auth/account');
+        await AsyncStorage.removeItem('user');
+        return data;
+    },
+
     getMe: async () => {
         const { data } = await api.get('/auth/me');
         return data;

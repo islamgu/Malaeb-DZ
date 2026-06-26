@@ -122,6 +122,9 @@ export const fr: TranslationKeys = {
         role: 'Rôle',
         user: 'utilisateur',
         admin: 'Admin',
+        deleteAccount: 'Supprimer le compte',
+        deleteAccountConfirm: 'Cela supprimera définitivement votre compte et toutes vos données (réservations, favoris, avis). Cette action est irréversible.',
+        deleteAccountFailed: 'Échec de la suppression du compte. Veuillez réessayer.',
     },
 
     // Stadium Detail

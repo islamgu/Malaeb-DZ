@@ -122,6 +122,9 @@ export const ar: TranslationKeys = {
         role: 'الدور',
         user: 'مستخدم',
         admin: 'مدير',
+        deleteAccount: 'حذف الحساب',
+        deleteAccountConfirm: 'سيؤدي هذا إلى حذف حسابك وجميع بياناتك نهائيًا (الحجوزات والمفضلة والتقييمات). لا يمكن التراجع عن هذا الإجراء.',
+        deleteAccountFailed: 'فشل حذف الحساب. يرجى المحاولة مرة أخرى.',
     },
 
     // Stadium Detail

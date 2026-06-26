@@ -20,6 +20,14 @@ app.use(express.json());
 // Serve uploaded images
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Public legal pages (Privacy Policy & Account Deletion) for Google Play
+app.get('/privacy-policy', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/privacy-policy.html'));
+});
+app.get('/account-deletion', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/account-deletion.html'));
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/stadiums', stadiumRoutes);

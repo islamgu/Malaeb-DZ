@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '../../translations';
+import { isReviewAccount } from '../../config/review';
 
 export const LoginScreen: React.FC = () => {
     const navigation = useNavigation<any>();
@@ -47,7 +48,9 @@ export const LoginScreen: React.FC = () => {
             const result = await signIn(email.trim(), password);
 
             if (result.success) {
-                if (!result.emailVerified) {
+                // Demo/review accounts skip the email-verification gate so store
+                // reviewers can access the app without the account's email inbox.
+                if (!result.emailVerified && !isReviewAccount(email)) {
                     // Email not verified, navigate to verification screen
                     navigation.navigate('EmailVerification', {
                         email: email.trim(),

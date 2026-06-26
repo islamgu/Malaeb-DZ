@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StatusBar, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import {
     User, Mail, Phone, CreditCard, History, Settings,
-    LogOut, Globe, ChevronRight, Sun, Moon, Heart
+    LogOut, Globe, ChevronRight, Sun, Moon, Heart, Trash2
 } from 'lucide-react-native';
 import { TopBar } from '../../components/shared/TopBar';
 import { useAuth } from '../../context/AuthContext';
@@ -12,13 +12,39 @@ import { useTranslation } from '../../translations';
 
 export const ProfileScreen: React.FC = () => {
     const navigation = useNavigation<any>();
-    const { user, logout } = useAuth();
+    const { user, logout, deleteAccount } = useAuth();
     const { language, setLanguage, isDarkMode, toggleDarkMode, theme } = useApp();
     const { t, isRTL } = useTranslation();
 
     const handleLogout = async () => {
         await logout();
         navigation.replace('SignUp');
+    };
+
+    const handleDeleteAccount = () => {
+        Alert.alert(
+            t.profile.deleteAccount || 'Delete Account',
+            t.profile.deleteAccountConfirm ||
+                'This will permanently delete your account and all your data. This action cannot be undone.',
+            [
+                { text: t.common.cancel || 'Cancel', style: 'cancel' },
+                {
+                    text: t.profile.deleteAccount || 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        const result = await deleteAccount();
+                        if (result.success) {
+                            navigation.replace('SignUp');
+                        } else {
+                            Alert.alert(
+                                t.common.error,
+                                result.error || t.profile.deleteAccountFailed || 'Failed to delete account'
+                            );
+                        }
+                    },
+                },
+            ]
+        );
     };
 
     const menuItems = [
@@ -190,6 +216,22 @@ export const ProfileScreen: React.FC = () => {
                 >
                     <LogOut size={20} color="#DC2626" />
                     <Text style={{ color: '#DC2626', fontWeight: '600' }}>{t.profile.logout}</Text>
+                </TouchableOpacity>
+
+                {/* Delete Account */}
+                <TouchableOpacity
+                    onPress={handleDeleteAccount}
+                    style={{
+                        marginTop: 12,
+                        padding: 16, flexDirection: 'row',
+                        alignItems: 'center', justifyContent: 'center', gap: 8,
+                    }}
+                    activeOpacity={0.7}
+                >
+                    <Trash2 size={18} color={theme.textMuted} />
+                    <Text style={{ color: theme.textMuted, fontWeight: '500' }}>
+                        {t.profile.deleteAccount || 'Delete Account'}
+                    </Text>
                 </TouchableOpacity>
             </ScrollView>
         </View>

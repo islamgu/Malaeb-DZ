@@ -120,6 +120,9 @@ export const en = {
         role: 'Role',
         user: 'user',
         admin: 'Admin',
+        deleteAccount: 'Delete Account',
+        deleteAccountConfirm: 'This will permanently delete your account and all your data (bookings, favorites, reviews). This action cannot be undone.',
+        deleteAccountFailed: 'Failed to delete account. Please try again.',
     },
 
     // Stadium Detail

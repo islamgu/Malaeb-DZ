@@ -22,6 +22,7 @@ interface AuthContextType {
     sendVerificationEmail: () => Promise<{ success: boolean; error?: string }>;
     checkEmailVerified: () => Promise<{ verified: boolean; error?: string }>;
     logout: () => Promise<void>;
+    deleteAccount: () => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -201,6 +202,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setFirebaseUser(null);
     };
 
+    // Permanently delete the user's account and all associated data
+    const deleteAccount = async () => {
+        try {
+            // Must run while still signed in so the request carries a valid token.
+            // The backend deletes the Firebase user and the DB record (cascades).
+            await authApi.deleteAccount();
+        } catch (error: any) {
+            console.error('Delete account error:', error);
+            return {
+                success: false,
+                error: error.response?.data?.error || 'Failed to delete account',
+            };
+        }
+
+        // Clear the now-stale local Firebase session and state
+        try {
+            await auth().signOut();
+        } catch (error) {
+            console.error('Firebase signout error:', error);
+        }
+        setUser(null);
+        setFirebaseUser(null);
+        return { success: true };
+    };
+
     return (
         <AuthContext.Provider
             value={{
@@ -214,6 +240,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 sendVerificationEmail,
                 checkEmailVerified,
                 logout,
+                deleteAccount,
             }}
         >
             {children}

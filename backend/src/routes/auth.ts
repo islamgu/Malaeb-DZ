@@ -3,6 +3,7 @@ import { db } from '../db';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { AuthRequest, authenticate } from '../middleware/auth';
+import admin from '../firebase';
 
 const router = Router();
 
@@ -115,6 +116,34 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
     } catch (error) {
         console.error('Me error:', error);
         res.status(500).json({ error: 'Failed to get user' });
+    }
+});
+
+// DELETE /api/auth/account - Permanently delete the authenticated user's account
+// Removes the Firebase Auth user and the local DB record (cascades to the user's
+// bookings, favorites, reviews and payments). Required by Google Play policy for
+// apps that let users create an account.
+router.delete('/account', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        // Delete the Firebase Auth user using the uid from the verified token
+        if (req.firebaseUid) {
+            try {
+                await admin.auth().deleteUser(req.firebaseUid);
+            } catch (fbError: any) {
+                // If the Firebase user is already gone, continue with DB cleanup
+                if (fbError?.code !== 'auth/user-not-found') {
+                    console.error('Firebase delete error:', fbError);
+                }
+            }
+        }
+
+        // Delete the local DB record (cascades to bookings, favorites, reviews, payments)
+        await db.delete(users).where(eq(users.id, req.user!.id));
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete account error:', error);
+        res.status(500).json({ error: 'Failed to delete account' });
     }
 });
 
