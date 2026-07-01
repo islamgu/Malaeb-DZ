@@ -5,8 +5,8 @@ import auth from '@react-native-firebase/auth';
 // Use your computer's local IP for device testing
 // Android emulator: use 10.0.2.2, Android physical device: use your computer's IP
 // iOS simulator: can use localhost, iOS physical device: use your computer's IP
-const API_URL = 'https://malaeb-dz.onrender.com/api';
-export const BASE_URL = 'https://malaeb-dz.onrender.com';
+const API_URL = 'https://malaeb-dz-27h6.onrender.com/api';
+export const BASE_URL = 'https://malaeb-dz-27h6.onrender.com';
 
 // Create axios instance
 const api = axios.create({
